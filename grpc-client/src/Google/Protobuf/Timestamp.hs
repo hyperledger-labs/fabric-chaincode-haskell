@@ -34,16 +34,16 @@ import qualified Data.Word as Hs (Word16, Word32, Word64)
 import qualified GHC.Enum as Hs
 import qualified GHC.Generics as Hs
 import qualified Unsafe.Coerce as Hs
- 
+
 data Timestamp = Timestamp{timestampSeconds :: Hs.Int64,
                            timestampNanos :: Hs.Int32}
                deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named Timestamp where
         nameOf _ = (Hs.fromString "Timestamp")
- 
+
 instance HsProtobuf.HasDefault Timestamp
- 
+
 instance HsProtobuf.Message Timestamp where
         encodeMessage _
           Timestamp{timestampSeconds = timestampSeconds,
@@ -71,26 +71,26 @@ instance HsProtobuf.Message Timestamp where
                 (HsProtobuf.Single "nanos")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB Timestamp where
         toJSONPB (Timestamp f1 f2)
           = (HsJSONPB.object ["seconds" .= f1, "nanos" .= f2])
         toEncodingPB (Timestamp f1 f2)
           = (HsJSONPB.pairs ["seconds" .= f1, "nanos" .= f2])
- 
+
 instance HsJSONPB.FromJSONPB Timestamp where
         parseJSONPB
           = (HsJSONPB.withObject "Timestamp"
                (\ obj ->
                   (Hs.pure Timestamp) <*> obj .: "seconds" <*> obj .: "nanos"))
- 
+
 instance HsJSONPB.ToJSON Timestamp where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON Timestamp where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema Timestamp where
         declareNamedSchema _
           = do let declare_seconds = HsJSONPB.declareSchemaRef
@@ -105,7 +105,7 @@ instance HsJSONPB.ToSchema Timestamp where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("seconds", timestampSeconds),

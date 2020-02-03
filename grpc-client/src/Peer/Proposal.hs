@@ -36,17 +36,17 @@ import qualified GHC.Generics as Hs
 import qualified Unsafe.Coerce as Hs
 import qualified Peer.Chaincode
 import qualified Peer.ProposalResponse
- 
+
 data SignedProposal = SignedProposal{signedProposalProposalBytes ::
                                      Hs.ByteString,
                                      signedProposalSignature :: Hs.ByteString}
                     deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named SignedProposal where
         nameOf _ = (Hs.fromString "SignedProposal")
- 
+
 instance HsProtobuf.HasDefault SignedProposal
- 
+
 instance HsProtobuf.Message SignedProposal where
         encodeMessage _
           SignedProposal{signedProposalProposalBytes =
@@ -75,27 +75,27 @@ instance HsProtobuf.Message SignedProposal where
                 (HsProtobuf.Single "signature")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB SignedProposal where
         toJSONPB (SignedProposal f1 f2)
           = (HsJSONPB.object ["proposal_bytes" .= f1, "signature" .= f2])
         toEncodingPB (SignedProposal f1 f2)
           = (HsJSONPB.pairs ["proposal_bytes" .= f1, "signature" .= f2])
- 
+
 instance HsJSONPB.FromJSONPB SignedProposal where
         parseJSONPB
           = (HsJSONPB.withObject "SignedProposal"
                (\ obj ->
                   (Hs.pure SignedProposal) <*> obj .: "proposal_bytes" <*>
                     obj .: "signature"))
- 
+
 instance HsJSONPB.ToJSON SignedProposal where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON SignedProposal where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema SignedProposal where
         declareNamedSchema _
           = do let declare_proposal_bytes = HsJSONPB.declareSchemaRef
@@ -111,23 +111,23 @@ instance HsJSONPB.ToSchema SignedProposal where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("proposal_bytes",
                                                          signedProposalProposalBytes),
                                                         ("signature", signedProposalSignature)]}})
- 
+
 data Proposal = Proposal{proposalHeader :: Hs.ByteString,
                          proposalPayload :: Hs.ByteString,
                          proposalExtension :: Hs.ByteString}
               deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named Proposal where
         nameOf _ = (Hs.fromString "Proposal")
- 
+
 instance HsProtobuf.HasDefault Proposal
- 
+
 instance HsProtobuf.Message Proposal where
         encodeMessage _
           Proposal{proposalHeader = proposalHeader,
@@ -166,7 +166,7 @@ instance HsProtobuf.Message Proposal where
                 (HsProtobuf.Single "extension")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB Proposal where
         toJSONPB (Proposal f1 f2 f3)
           = (HsJSONPB.object
@@ -174,21 +174,21 @@ instance HsJSONPB.ToJSONPB Proposal where
         toEncodingPB (Proposal f1 f2 f3)
           = (HsJSONPB.pairs
                ["header" .= f1, "payload" .= f2, "extension" .= f3])
- 
+
 instance HsJSONPB.FromJSONPB Proposal where
         parseJSONPB
           = (HsJSONPB.withObject "Proposal"
                (\ obj ->
                   (Hs.pure Proposal) <*> obj .: "header" <*> obj .: "payload" <*>
                     obj .: "extension"))
- 
+
 instance HsJSONPB.ToJSON Proposal where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON Proposal where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema Proposal where
         declareNamedSchema _
           = do let declare_header = HsJSONPB.declareSchemaRef
@@ -206,22 +206,22 @@ instance HsJSONPB.ToSchema Proposal where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("header", proposalHeader),
                                                         ("payload", proposalPayload),
                                                         ("extension", proposalExtension)]}})
- 
+
 data ChaincodeHeaderExtension = ChaincodeHeaderExtension{chaincodeHeaderExtensionChaincodeId
                                                          :: Hs.Maybe Peer.Chaincode.ChaincodeID}
                               deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeHeaderExtension where
         nameOf _ = (Hs.fromString "ChaincodeHeaderExtension")
- 
+
 instance HsProtobuf.HasDefault ChaincodeHeaderExtension
- 
+
 instance HsProtobuf.Message ChaincodeHeaderExtension where
         encodeMessage _
           ChaincodeHeaderExtension{chaincodeHeaderExtensionChaincodeId =
@@ -244,26 +244,26 @@ instance HsProtobuf.Message ChaincodeHeaderExtension where
                 (HsProtobuf.Single "chaincode_id")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeHeaderExtension where
         toJSONPB (ChaincodeHeaderExtension f2)
           = (HsJSONPB.object ["chaincode_id" .= f2])
         toEncodingPB (ChaincodeHeaderExtension f2)
           = (HsJSONPB.pairs ["chaincode_id" .= f2])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeHeaderExtension where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeHeaderExtension"
                (\ obj ->
                   (Hs.pure ChaincodeHeaderExtension) <*> obj .: "chaincode_id"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeHeaderExtension where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeHeaderExtension where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema ChaincodeHeaderExtension where
         declareNamedSchema _
           = do let declare_chaincode_id = HsJSONPB.declareSchemaRef
@@ -277,23 +277,23 @@ instance HsJSONPB.ToSchema ChaincodeHeaderExtension where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("chaincode_id",
                                                          chaincodeHeaderExtensionChaincodeId)]}})
- 
+
 data ChaincodeProposalPayload = ChaincodeProposalPayload{chaincodeProposalPayloadInput
                                                          :: Hs.ByteString,
                                                          chaincodeProposalPayloadTransientMap ::
                                                          Hs.Map Hs.Text Hs.ByteString}
                               deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeProposalPayload where
         nameOf _ = (Hs.fromString "ChaincodeProposalPayload")
- 
+
 instance HsProtobuf.HasDefault ChaincodeProposalPayload
- 
+
 instance HsProtobuf.Message ChaincodeProposalPayload where
         encodeMessage _
           ChaincodeProposalPayload{chaincodeProposalPayloadInput =
@@ -323,50 +323,50 @@ instance HsProtobuf.Message ChaincodeProposalPayload where
                 (HsProtobuf.Single "TransientMap")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeProposalPayload where
         toJSONPB (ChaincodeProposalPayload f1 f2)
           = (HsJSONPB.object ["input" .= f1, "TransientMap" .= f2])
         toEncodingPB (ChaincodeProposalPayload f1 f2)
           = (HsJSONPB.pairs ["input" .= f1, "TransientMap" .= f2])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeProposalPayload where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeProposalPayload"
                (\ obj ->
                   (Hs.pure ChaincodeProposalPayload) <*> obj .: "input" <*>
                     obj .: "TransientMap"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeProposalPayload where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeProposalPayload where
         parseJSON = HsJSONPB.parseJSONPB
- 
-instance HsJSONPB.ToSchema ChaincodeProposalPayload where
-        declareNamedSchema _
-          = do let declare_input = HsJSONPB.declareSchemaRef
-               chaincodeProposalPayloadInput <- declare_input Proxy.Proxy
-               let declare_TransientMap = HsJSONPB.declareSchemaRef
-               chaincodeProposalPayloadTransientMap <- declare_TransientMap
-                                                         Proxy.Proxy
-               let _ = Hs.pure ChaincodeProposalPayload <*>
-                         HsJSONPB.asProxy declare_input
-                         <*> HsJSONPB.asProxy declare_TransientMap
-               Hs.return
-                 (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
-                                         Hs.Just "ChaincodeProposalPayload",
-                                       HsJSONPB._namedSchemaSchema =
-                                         Hs.mempty{HsJSONPB._schemaParamSchema =
-                                                     Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
-                                                   HsJSONPB._schemaProperties =
-                                                     HsJSONPB.insOrdFromList
-                                                       [("input", chaincodeProposalPayloadInput),
-                                                        ("TransientMap",
-                                                         chaincodeProposalPayloadTransientMap)]}})
- 
+
+-- instance HsJSONPB.ToSchema ChaincodeProposalPayload where
+--         declareNamedSchema _
+--           = do let declare_input = HsJSONPB.declareSchemaRef
+--                chaincodeProposalPayloadInput <- declare_input Proxy.Proxy
+--                let declare_TransientMap = HsJSONPB.declareSchemaRef
+--                chaincodeProposalPayloadTransientMap <- declare_TransientMap
+--                                                          Proxy.Proxy
+--                let _ = Hs.pure ChaincodeProposalPayload <*>
+--                          HsJSONPB.asProxy declare_input
+--                          <*> HsJSONPB.asProxy declare_TransientMap
+--                Hs.return
+--                  (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
+--                                          Hs.Just "ChaincodeProposalPayload",
+--                                        HsJSONPB._namedSchemaSchema =
+--                                          Hs.mempty{HsJSONPB._schemaParamSchema =
+--                                                      Hs.mempty{HsJSONPB._paramSchemaType =
+--                                                                  Hs.Just HsJSONPB.SwaggerObject},
+--                                                    HsJSONPB._schemaProperties =
+--                                                      HsJSONPB.insOrdFromList
+--                                                        [("input", chaincodeProposalPayloadInput),
+--                                                         ("TransientMap",
+--                                                          chaincodeProposalPayloadTransientMap)]}})
+
 data ChaincodeAction = ChaincodeAction{chaincodeActionResults ::
                                        Hs.ByteString,
                                        chaincodeActionEvents :: Hs.ByteString,
@@ -375,12 +375,12 @@ data ChaincodeAction = ChaincodeAction{chaincodeActionResults ::
                                        chaincodeActionChaincodeId ::
                                        Hs.Maybe Peer.Chaincode.ChaincodeID}
                      deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeAction where
         nameOf _ = (Hs.fromString "ChaincodeAction")
- 
+
 instance HsProtobuf.HasDefault ChaincodeAction
- 
+
 instance HsProtobuf.Message ChaincodeAction where
         encodeMessage _
           ChaincodeAction{chaincodeActionResults = chaincodeActionResults,
@@ -439,7 +439,7 @@ instance HsProtobuf.Message ChaincodeAction where
                 (HsProtobuf.Single "chaincode_id")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeAction where
         toJSONPB (ChaincodeAction f1 f2 f3 f4)
           = (HsJSONPB.object
@@ -449,7 +449,7 @@ instance HsJSONPB.ToJSONPB ChaincodeAction where
           = (HsJSONPB.pairs
                ["results" .= f1, "events" .= f2, "response" .= f3,
                 "chaincode_id" .= f4])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeAction where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeAction"
@@ -457,14 +457,14 @@ instance HsJSONPB.FromJSONPB ChaincodeAction where
                   (Hs.pure ChaincodeAction) <*> obj .: "results" <*> obj .: "events"
                     <*> obj .: "response"
                     <*> obj .: "chaincode_id"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeAction where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeAction where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema ChaincodeAction where
         declareNamedSchema _
           = do let declare_results = HsJSONPB.declareSchemaRef
@@ -486,7 +486,7 @@ instance HsJSONPB.ToSchema ChaincodeAction where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("results", chaincodeActionResults),
