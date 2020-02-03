@@ -34,7 +34,11 @@ packages:
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
 #
-# extra-deps:
+extra-deps:
+- grpc-haskell-core-0.0.0.0@sha256:4bacd90915321750db570042cd05ada01b9b83c79f6bf6b6ccdef1889b383efa,3306
+- grpc-haskell-0.0.1.0@sha256:453f89f3a3a846b31596b0f8f41ed3d71c747d59b208a043d75afd37a9f17308,6012
+- proto3-suite-0.4.0.0@sha256:51545a2592f22d1bf612a2f55ca3af8b0083fb5c620c8996bc6d48f742d1faa1,5720
+- proto3-wire-1.1.0@sha256:a8fe11ec7c8d01ded2224a1ca43c53cdc09adefd197a3b21ab14b543923840f3,1993
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a

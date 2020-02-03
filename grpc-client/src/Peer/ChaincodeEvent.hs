@@ -34,19 +34,19 @@ import qualified Data.Word as Hs (Word16, Word32, Word64)
 import qualified GHC.Enum as Hs
 import qualified GHC.Generics as Hs
 import qualified Unsafe.Coerce as Hs
- 
+
 data ChaincodeEvent = ChaincodeEvent{chaincodeEventChaincodeId ::
                                      Hs.Text,
                                      chaincodeEventTxId :: Hs.Text,
                                      chaincodeEventEventName :: Hs.Text,
                                      chaincodeEventPayload :: Hs.ByteString}
                     deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeEvent where
         nameOf _ = (Hs.fromString "ChaincodeEvent")
- 
+
 instance HsProtobuf.HasDefault ChaincodeEvent
- 
+
 instance HsProtobuf.Message ChaincodeEvent where
         encodeMessage _
           ChaincodeEvent{chaincodeEventChaincodeId =
@@ -97,7 +97,7 @@ instance HsProtobuf.Message ChaincodeEvent where
                 (HsProtobuf.Single "payload")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeEvent where
         toJSONPB (ChaincodeEvent f1 f2 f3 f4)
           = (HsJSONPB.object
@@ -107,7 +107,7 @@ instance HsJSONPB.ToJSONPB ChaincodeEvent where
           = (HsJSONPB.pairs
                ["chaincode_id" .= f1, "tx_id" .= f2, "event_name" .= f3,
                 "payload" .= f4])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeEvent where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeEvent"
@@ -116,14 +116,14 @@ instance HsJSONPB.FromJSONPB ChaincodeEvent where
                     obj .: "tx_id"
                     <*> obj .: "event_name"
                     <*> obj .: "payload"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeEvent where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeEvent where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema ChaincodeEvent where
         declareNamedSchema _
           = do let declare_chaincode_id = HsJSONPB.declareSchemaRef
@@ -145,7 +145,7 @@ instance HsJSONPB.ToSchema ChaincodeEvent where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("chaincode_id", chaincodeEventChaincodeId),

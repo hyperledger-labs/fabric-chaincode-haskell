@@ -21,6 +21,15 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- grpc-haskell-core
+- grpc-haskell
+- proto3-suite
+- proto3-wire
+- vector
+- bytestring
+- text
+- deepseq
+- containers
 
 library:
   source-dirs: src

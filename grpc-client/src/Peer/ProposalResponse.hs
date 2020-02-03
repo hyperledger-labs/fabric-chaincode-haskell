@@ -35,7 +35,7 @@ import qualified GHC.Enum as Hs
 import qualified GHC.Generics as Hs
 import qualified Unsafe.Coerce as Hs
 import qualified Google.Protobuf.Timestamp
- 
+
 data ProposalResponse = ProposalResponse{proposalResponseVersion ::
                                          Hs.Int32,
                                          proposalResponseTimestamp ::
@@ -46,12 +46,12 @@ data ProposalResponse = ProposalResponse{proposalResponseVersion ::
                                          proposalResponseEndorsement ::
                                          Hs.Maybe Peer.ProposalResponse.Endorsement}
                       deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ProposalResponse where
         nameOf _ = (Hs.fromString "ProposalResponse")
- 
+
 instance HsProtobuf.HasDefault ProposalResponse
- 
+
 instance HsProtobuf.Message ProposalResponse where
         encodeMessage _
           ProposalResponse{proposalResponseVersion = proposalResponseVersion,
@@ -130,7 +130,7 @@ instance HsProtobuf.Message ProposalResponse where
                 (HsProtobuf.Single "endorsement")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ProposalResponse where
         toJSONPB (ProposalResponse f1 f2 f4 f5 f6)
           = (HsJSONPB.object
@@ -140,7 +140,7 @@ instance HsJSONPB.ToJSONPB ProposalResponse where
           = (HsJSONPB.pairs
                ["version" .= f1, "timestamp" .= f2, "response" .= f4,
                 "payload" .= f5, "endorsement" .= f6])
- 
+
 instance HsJSONPB.FromJSONPB ProposalResponse where
         parseJSONPB
           = (HsJSONPB.withObject "ProposalResponse"
@@ -150,14 +150,14 @@ instance HsJSONPB.FromJSONPB ProposalResponse where
                     <*> obj .: "response"
                     <*> obj .: "payload"
                     <*> obj .: "endorsement"))
- 
+
 instance HsJSONPB.ToJSON ProposalResponse where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ProposalResponse where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema ProposalResponse where
         declareNamedSchema _
           = do let declare_version = HsJSONPB.declareSchemaRef
@@ -182,7 +182,7 @@ instance HsJSONPB.ToSchema ProposalResponse where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("version", proposalResponseVersion),
@@ -191,16 +191,16 @@ instance HsJSONPB.ToSchema ProposalResponse where
                                                         ("payload", proposalResponsePayload),
                                                         ("endorsement",
                                                          proposalResponseEndorsement)]}})
- 
+
 data Response = Response{responseStatus :: Hs.Int32,
                          responseMessage :: Hs.Text, responsePayload :: Hs.ByteString}
               deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named Response where
         nameOf _ = (Hs.fromString "Response")
- 
+
 instance HsProtobuf.HasDefault Response
- 
+
 instance HsProtobuf.Message Response where
         encodeMessage _
           Response{responseStatus = responseStatus,
@@ -239,7 +239,7 @@ instance HsProtobuf.Message Response where
                 (HsProtobuf.Single "payload")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB Response where
         toJSONPB (Response f1 f2 f3)
           = (HsJSONPB.object
@@ -247,21 +247,21 @@ instance HsJSONPB.ToJSONPB Response where
         toEncodingPB (Response f1 f2 f3)
           = (HsJSONPB.pairs
                ["status" .= f1, "message" .= f2, "payload" .= f3])
- 
+
 instance HsJSONPB.FromJSONPB Response where
         parseJSONPB
           = (HsJSONPB.withObject "Response"
                (\ obj ->
                   (Hs.pure Response) <*> obj .: "status" <*> obj .: "message" <*>
                     obj .: "payload"))
- 
+
 instance HsJSONPB.ToJSON Response where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON Response where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema Response where
         declareNamedSchema _
           = do let declare_status = HsJSONPB.declareSchemaRef
@@ -279,24 +279,24 @@ instance HsJSONPB.ToSchema Response where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("status", responseStatus),
                                                         ("message", responseMessage),
                                                         ("payload", responsePayload)]}})
- 
+
 data ProposalResponsePayload = ProposalResponsePayload{proposalResponsePayloadProposalHash
                                                        :: Hs.ByteString,
                                                        proposalResponsePayloadExtension ::
                                                        Hs.ByteString}
                              deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ProposalResponsePayload where
         nameOf _ = (Hs.fromString "ProposalResponsePayload")
- 
+
 instance HsProtobuf.HasDefault ProposalResponsePayload
- 
+
 instance HsProtobuf.Message ProposalResponsePayload where
         encodeMessage _
           ProposalResponsePayload{proposalResponsePayloadProposalHash =
@@ -326,27 +326,27 @@ instance HsProtobuf.Message ProposalResponsePayload where
                 (HsProtobuf.Single "extension")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ProposalResponsePayload where
         toJSONPB (ProposalResponsePayload f1 f2)
           = (HsJSONPB.object ["proposal_hash" .= f1, "extension" .= f2])
         toEncodingPB (ProposalResponsePayload f1 f2)
           = (HsJSONPB.pairs ["proposal_hash" .= f1, "extension" .= f2])
- 
+
 instance HsJSONPB.FromJSONPB ProposalResponsePayload where
         parseJSONPB
           = (HsJSONPB.withObject "ProposalResponsePayload"
                (\ obj ->
                   (Hs.pure ProposalResponsePayload) <*> obj .: "proposal_hash" <*>
                     obj .: "extension"))
- 
+
 instance HsJSONPB.ToJSON ProposalResponsePayload where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ProposalResponsePayload where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema ProposalResponsePayload where
         declareNamedSchema _
           = do let declare_proposal_hash = HsJSONPB.declareSchemaRef
@@ -363,24 +363,24 @@ instance HsJSONPB.ToSchema ProposalResponsePayload where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("proposal_hash",
                                                          proposalResponsePayloadProposalHash),
                                                         ("extension",
                                                          proposalResponsePayloadExtension)]}})
- 
+
 data Endorsement = Endorsement{endorsementEndorser ::
                                Hs.ByteString,
                                endorsementSignature :: Hs.ByteString}
                  deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named Endorsement where
         nameOf _ = (Hs.fromString "Endorsement")
- 
+
 instance HsProtobuf.HasDefault Endorsement
- 
+
 instance HsProtobuf.Message Endorsement where
         encodeMessage _
           Endorsement{endorsementEndorser = endorsementEndorser,
@@ -408,27 +408,27 @@ instance HsProtobuf.Message Endorsement where
                 (HsProtobuf.Single "signature")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB Endorsement where
         toJSONPB (Endorsement f1 f2)
           = (HsJSONPB.object ["endorser" .= f1, "signature" .= f2])
         toEncodingPB (Endorsement f1 f2)
           = (HsJSONPB.pairs ["endorser" .= f1, "signature" .= f2])
- 
+
 instance HsJSONPB.FromJSONPB Endorsement where
         parseJSONPB
           = (HsJSONPB.withObject "Endorsement"
                (\ obj ->
                   (Hs.pure Endorsement) <*> obj .: "endorser" <*>
                     obj .: "signature"))
- 
+
 instance HsJSONPB.ToJSON Endorsement where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON Endorsement where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema Endorsement where
         declareNamedSchema _
           = do let declare_endorser = HsJSONPB.declareSchemaRef
@@ -443,7 +443,7 @@ instance HsJSONPB.ToSchema Endorsement where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("endorser", endorsementEndorser),

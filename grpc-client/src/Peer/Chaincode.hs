@@ -35,16 +35,16 @@ import qualified GHC.Enum as Hs
 import qualified GHC.Generics as Hs
 import qualified Unsafe.Coerce as Hs
 import qualified Common.Policies
- 
+
 data ChaincodeID = ChaincodeID{chaincodeIDPath :: Hs.Text,
                                chaincodeIDName :: Hs.Text, chaincodeIDVersion :: Hs.Text}
                  deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeID where
         nameOf _ = (Hs.fromString "ChaincodeID")
- 
+
 instance HsProtobuf.HasDefault ChaincodeID
- 
+
 instance HsProtobuf.Message ChaincodeID where
         encodeMessage _
           ChaincodeID{chaincodeIDPath = chaincodeIDPath,
@@ -83,27 +83,27 @@ instance HsProtobuf.Message ChaincodeID where
                 (HsProtobuf.Single "version")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeID where
         toJSONPB (ChaincodeID f1 f2 f3)
           = (HsJSONPB.object ["path" .= f1, "name" .= f2, "version" .= f3])
         toEncodingPB (ChaincodeID f1 f2 f3)
           = (HsJSONPB.pairs ["path" .= f1, "name" .= f2, "version" .= f3])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeID where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeID"
                (\ obj ->
                   (Hs.pure ChaincodeID) <*> obj .: "path" <*> obj .: "name" <*>
                     obj .: "version"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeID where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeID where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema ChaincodeID where
         declareNamedSchema _
           = do let declare_path = HsJSONPB.declareSchemaRef
@@ -121,24 +121,24 @@ instance HsJSONPB.ToSchema ChaincodeID where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("path", chaincodeIDPath),
                                                         ("name", chaincodeIDName),
                                                         ("version", chaincodeIDVersion)]}})
- 
+
 data ChaincodeInput = ChaincodeInput{chaincodeInputArgs ::
                                      Hs.Vector Hs.ByteString,
                                      chaincodeInputDecorations :: Hs.Map Hs.Text Hs.ByteString,
                                      chaincodeInputIsInit :: Hs.Bool}
                     deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeInput where
         nameOf _ = (Hs.fromString "ChaincodeInput")
- 
+
 instance HsProtobuf.HasDefault ChaincodeInput
- 
+
 instance HsProtobuf.Message ChaincodeInput where
         encodeMessage _
           ChaincodeInput{chaincodeInputArgs = chaincodeInputArgs,
@@ -181,7 +181,7 @@ instance HsProtobuf.Message ChaincodeInput where
                 (HsProtobuf.Single "is_init")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeInput where
         toJSONPB (ChaincodeInput f1 f2 f3)
           = (HsJSONPB.object
@@ -189,57 +189,57 @@ instance HsJSONPB.ToJSONPB ChaincodeInput where
         toEncodingPB (ChaincodeInput f1 f2 f3)
           = (HsJSONPB.pairs
                ["args" .= f1, "decorations" .= f2, "is_init" .= f3])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeInput where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeInput"
                (\ obj ->
                   (Hs.pure ChaincodeInput) <*> obj .: "args" <*> obj .: "decorations"
                     <*> obj .: "is_init"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeInput where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeInput where
         parseJSON = HsJSONPB.parseJSONPB
- 
-instance HsJSONPB.ToSchema ChaincodeInput where
-        declareNamedSchema _
-          = do let declare_args = HsJSONPB.declareSchemaRef
-               chaincodeInputArgs <- declare_args Proxy.Proxy
-               let declare_decorations = HsJSONPB.declareSchemaRef
-               chaincodeInputDecorations <- declare_decorations Proxy.Proxy
-               let declare_is_init = HsJSONPB.declareSchemaRef
-               chaincodeInputIsInit <- declare_is_init Proxy.Proxy
-               let _ = Hs.pure ChaincodeInput <*> HsJSONPB.asProxy declare_args
-                         <*> HsJSONPB.asProxy declare_decorations
-                         <*> HsJSONPB.asProxy declare_is_init
-               Hs.return
-                 (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
-                                         Hs.Just "ChaincodeInput",
-                                       HsJSONPB._namedSchemaSchema =
-                                         Hs.mempty{HsJSONPB._schemaParamSchema =
-                                                     Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
-                                                   HsJSONPB._schemaProperties =
-                                                     HsJSONPB.insOrdFromList
-                                                       [("args", chaincodeInputArgs),
-                                                        ("decorations", chaincodeInputDecorations),
-                                                        ("is_init", chaincodeInputIsInit)]}})
- 
+
+-- instance HsJSONPB.ToSchema ChaincodeInput where
+--         declareNamedSchema _
+--           = do let declare_args = HsJSONPB.declareSchemaRef
+--                chaincodeInputArgs <- declare_args Proxy.Proxy
+--                let declare_decorations = HsJSONPB.declareSchemaRef
+--                chaincodeInputDecorations <- declare_decorations Proxy.Proxy
+--                let declare_is_init = HsJSONPB.declareSchemaRef
+--                chaincodeInputIsInit <- declare_is_init Proxy.Proxy
+--                let _ = Hs.pure ChaincodeInput <*> HsJSONPB.asProxy declare_args
+--                          <*> HsJSONPB.asProxy declare_decorations
+--                          <*> HsJSONPB.asProxy declare_is_init
+--                Hs.return
+--                  (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
+--                                          Hs.Just "ChaincodeInput",
+--                                        HsJSONPB._namedSchemaSchema =
+--                                          Hs.mempty{HsJSONPB._schemaParamSchema =
+--                                                      Hs.mempty{HsJSONPB._paramSchemaType =
+--                                                                  Hs.Just HsJSONPB.SwaggerObject},
+--                                                    HsJSONPB._schemaProperties =
+--                                                      HsJSONPB.insOrdFromList
+--                                                        [("args", chaincodeInputArgs),
+--                                                         ("decorations", chaincodeInputDecorations),
+--                                                         ("is_init", chaincodeInputIsInit)]}})
+
 data ChaincodeSpec = ChaincodeSpec{chaincodeSpecType ::
                                    HsProtobuf.Enumerated Peer.Chaincode.ChaincodeSpec_Type,
                                    chaincodeSpecChaincodeId :: Hs.Maybe Peer.Chaincode.ChaincodeID,
                                    chaincodeSpecInput :: Hs.Maybe Peer.Chaincode.ChaincodeInput,
                                    chaincodeSpecTimeout :: Hs.Int32}
                    deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeSpec where
         nameOf _ = (Hs.fromString "ChaincodeSpec")
- 
+
 instance HsProtobuf.HasDefault ChaincodeSpec
- 
+
 instance HsProtobuf.Message ChaincodeSpec where
         encodeMessage _
           ChaincodeSpec{chaincodeSpecType = chaincodeSpecType,
@@ -299,7 +299,7 @@ instance HsProtobuf.Message ChaincodeSpec where
                 (HsProtobuf.Single "timeout")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeSpec where
         toJSONPB (ChaincodeSpec f1 f2 f3 f4)
           = (HsJSONPB.object
@@ -309,7 +309,7 @@ instance HsJSONPB.ToJSONPB ChaincodeSpec where
           = (HsJSONPB.pairs
                ["type" .= f1, "chaincode_id" .= f2, "input" .= f3,
                 "timeout" .= f4])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeSpec where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeSpec"
@@ -317,63 +317,63 @@ instance HsJSONPB.FromJSONPB ChaincodeSpec where
                   (Hs.pure ChaincodeSpec) <*> obj .: "type" <*> obj .: "chaincode_id"
                     <*> obj .: "input"
                     <*> obj .: "timeout"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeSpec where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeSpec where
         parseJSON = HsJSONPB.parseJSONPB
- 
-instance HsJSONPB.ToSchema ChaincodeSpec where
-        declareNamedSchema _
-          = do let declare_type = HsJSONPB.declareSchemaRef
-               chaincodeSpecType <- declare_type Proxy.Proxy
-               let declare_chaincode_id = HsJSONPB.declareSchemaRef
-               chaincodeSpecChaincodeId <- declare_chaincode_id Proxy.Proxy
-               let declare_input = HsJSONPB.declareSchemaRef
-               chaincodeSpecInput <- declare_input Proxy.Proxy
-               let declare_timeout = HsJSONPB.declareSchemaRef
-               chaincodeSpecTimeout <- declare_timeout Proxy.Proxy
-               let _ = Hs.pure ChaincodeSpec <*> HsJSONPB.asProxy declare_type <*>
-                         HsJSONPB.asProxy declare_chaincode_id
-                         <*> HsJSONPB.asProxy declare_input
-                         <*> HsJSONPB.asProxy declare_timeout
-               Hs.return
-                 (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
-                                         Hs.Just "ChaincodeSpec",
-                                       HsJSONPB._namedSchemaSchema =
-                                         Hs.mempty{HsJSONPB._schemaParamSchema =
-                                                     Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
-                                                   HsJSONPB._schemaProperties =
-                                                     HsJSONPB.insOrdFromList
-                                                       [("type", chaincodeSpecType),
-                                                        ("chaincode_id", chaincodeSpecChaincodeId),
-                                                        ("input", chaincodeSpecInput),
-                                                        ("timeout", chaincodeSpecTimeout)]}})
- 
+
+-- instance HsJSONPB.ToSchema ChaincodeSpec where
+--         declareNamedSchema _
+--           = do let declare_type = HsJSONPB.declareSchemaRef
+--                chaincodeSpecType <- declare_type Proxy.Proxy
+--                let declare_chaincode_id = HsJSONPB.declareSchemaRef
+--                chaincodeSpecChaincodeId <- declare_chaincode_id Proxy.Proxy
+--                let declare_input = HsJSONPB.declareSchemaRef
+--                chaincodeSpecInput <- declare_input Proxy.Proxy
+--                let declare_timeout = HsJSONPB.declareSchemaRef
+--                chaincodeSpecTimeout <- declare_timeout Proxy.Proxy
+--                let _ = Hs.pure ChaincodeSpec <*> HsJSONPB.asProxy declare_type <*>
+--                          HsJSONPB.asProxy declare_chaincode_id
+--                          <*> HsJSONPB.asProxy declare_input
+--                          <*> HsJSONPB.asProxy declare_timeout
+--                Hs.return
+--                  (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
+--                                          Hs.Just "ChaincodeSpec",
+--                                        HsJSONPB._namedSchemaSchema =
+--                                          Hs.mempty{HsJSONPB._schemaParamSchema =
+--                                                      Hs.mempty{HsJSONPB._paramSchemaType =
+--                                                                  Hs.Just HsJSONPB.SwaggerObject},
+--                                                    HsJSONPB._schemaProperties =
+--                                                      HsJSONPB.insOrdFromList
+--                                                        [("type", chaincodeSpecType),
+--                                                         ("chaincode_id", chaincodeSpecChaincodeId),
+--                                                         ("input", chaincodeSpecInput),
+--                                                         ("timeout", chaincodeSpecTimeout)]}})
+
 data ChaincodeSpec_Type = ChaincodeSpec_TypeUNDEFINED
                         | ChaincodeSpec_TypeGOLANG
                         | ChaincodeSpec_TypeNODE
                         | ChaincodeSpec_TypeCAR
                         | ChaincodeSpec_TypeJAVA
                         deriving (Hs.Show, Hs.Eq, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeSpec_Type where
         nameOf _ = (Hs.fromString "ChaincodeSpec_Type")
- 
+
 instance HsProtobuf.HasDefault ChaincodeSpec_Type
- 
+
 instance Hs.Bounded ChaincodeSpec_Type where
         minBound = ChaincodeSpec_TypeUNDEFINED
         maxBound = ChaincodeSpec_TypeJAVA
- 
+
 instance Hs.Ord ChaincodeSpec_Type where
         compare x y
           = Hs.compare (HsProtobuf.fromProtoEnum x)
               (HsProtobuf.fromProtoEnum y)
- 
+
 instance HsProtobuf.ProtoEnum ChaincodeSpec_Type where
         toProtoEnumMay 0 = Hs.Just ChaincodeSpec_TypeUNDEFINED
         toProtoEnumMay 1 = Hs.Just ChaincodeSpec_TypeGOLANG
@@ -386,11 +386,11 @@ instance HsProtobuf.ProtoEnum ChaincodeSpec_Type where
         fromProtoEnum (ChaincodeSpec_TypeNODE) = 2
         fromProtoEnum (ChaincodeSpec_TypeCAR) = 3
         fromProtoEnum (ChaincodeSpec_TypeJAVA) = 4
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeSpec_Type where
         toJSONPB x _ = HsJSONPB.enumFieldString x
         toEncodingPB x _ = HsJSONPB.enumFieldEncoding x
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeSpec_Type where
         parseJSONPB (HsJSONPB.String "UNDEFINED")
           = Hs.pure ChaincodeSpec_TypeUNDEFINED
@@ -402,27 +402,27 @@ instance HsJSONPB.FromJSONPB ChaincodeSpec_Type where
         parseJSONPB (HsJSONPB.String "JAVA")
           = Hs.pure ChaincodeSpec_TypeJAVA
         parseJSONPB v = (HsJSONPB.typeMismatch "ChaincodeSpec_Type" v)
- 
+
 instance HsJSONPB.ToJSON ChaincodeSpec_Type where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeSpec_Type where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsProtobuf.Finite ChaincodeSpec_Type
- 
+
 data ChaincodeDeploymentSpec = ChaincodeDeploymentSpec{chaincodeDeploymentSpecChaincodeSpec
                                                        :: Hs.Maybe Peer.Chaincode.ChaincodeSpec,
                                                        chaincodeDeploymentSpecCodePackage ::
                                                        Hs.ByteString}
                              deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeDeploymentSpec where
         nameOf _ = (Hs.fromString "ChaincodeDeploymentSpec")
- 
+
 instance HsProtobuf.HasDefault ChaincodeDeploymentSpec
- 
+
 instance HsProtobuf.Message ChaincodeDeploymentSpec where
         encodeMessage _
           ChaincodeDeploymentSpec{chaincodeDeploymentSpecChaincodeSpec =
@@ -457,61 +457,61 @@ instance HsProtobuf.Message ChaincodeDeploymentSpec where
                 (HsProtobuf.Single "code_package")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeDeploymentSpec where
         toJSONPB (ChaincodeDeploymentSpec f1 f3)
           = (HsJSONPB.object ["chaincode_spec" .= f1, "code_package" .= f3])
         toEncodingPB (ChaincodeDeploymentSpec f1 f3)
           = (HsJSONPB.pairs ["chaincode_spec" .= f1, "code_package" .= f3])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeDeploymentSpec where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeDeploymentSpec"
                (\ obj ->
                   (Hs.pure ChaincodeDeploymentSpec) <*> obj .: "chaincode_spec" <*>
                     obj .: "code_package"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeDeploymentSpec where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeDeploymentSpec where
         parseJSON = HsJSONPB.parseJSONPB
- 
-instance HsJSONPB.ToSchema ChaincodeDeploymentSpec where
-        declareNamedSchema _
-          = do let declare_chaincode_spec = HsJSONPB.declareSchemaRef
-               chaincodeDeploymentSpecChaincodeSpec <- declare_chaincode_spec
-                                                         Proxy.Proxy
-               let declare_code_package = HsJSONPB.declareSchemaRef
-               chaincodeDeploymentSpecCodePackage <- declare_code_package
-                                                       Proxy.Proxy
-               let _ = Hs.pure ChaincodeDeploymentSpec <*>
-                         HsJSONPB.asProxy declare_chaincode_spec
-                         <*> HsJSONPB.asProxy declare_code_package
-               Hs.return
-                 (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
-                                         Hs.Just "ChaincodeDeploymentSpec",
-                                       HsJSONPB._namedSchemaSchema =
-                                         Hs.mempty{HsJSONPB._schemaParamSchema =
-                                                     Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
-                                                   HsJSONPB._schemaProperties =
-                                                     HsJSONPB.insOrdFromList
-                                                       [("chaincode_spec",
-                                                         chaincodeDeploymentSpecChaincodeSpec),
-                                                        ("code_package",
-                                                         chaincodeDeploymentSpecCodePackage)]}})
- 
+
+-- instance HsJSONPB.ToSchema ChaincodeDeploymentSpec where
+--         declareNamedSchema _
+--           = do let declare_chaincode_spec = HsJSONPB.declareSchemaRef
+--                chaincodeDeploymentSpecChaincodeSpec <- declare_chaincode_spec
+--                                                          Proxy.Proxy
+--                let declare_code_package = HsJSONPB.declareSchemaRef
+--                chaincodeDeploymentSpecCodePackage <- declare_code_package
+--                                                        Proxy.Proxy
+--                let _ = Hs.pure ChaincodeDeploymentSpec <*>
+--                          HsJSONPB.asProxy declare_chaincode_spec
+--                          <*> HsJSONPB.asProxy declare_code_package
+--                Hs.return
+--                  (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
+--                                          Hs.Just "ChaincodeDeploymentSpec",
+--                                        HsJSONPB._namedSchemaSchema =
+--                                          Hs.mempty{HsJSONPB._schemaParamSchema =
+--                                                      Hs.mempty{HsJSONPB._paramSchemaType =
+--                                                                  Hs.Just HsJSONPB.SwaggerObject},
+--                                                    HsJSONPB._schemaProperties =
+--                                                      HsJSONPB.insOrdFromList
+--                                                        [("chaincode_spec",
+--                                                          chaincodeDeploymentSpecChaincodeSpec),
+--                                                         ("code_package",
+--                                                          chaincodeDeploymentSpecCodePackage)]}})
+
 data ChaincodeInvocationSpec = ChaincodeInvocationSpec{chaincodeInvocationSpecChaincodeSpec
                                                        :: Hs.Maybe Peer.Chaincode.ChaincodeSpec}
                              deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeInvocationSpec where
         nameOf _ = (Hs.fromString "ChaincodeInvocationSpec")
- 
+
 instance HsProtobuf.HasDefault ChaincodeInvocationSpec
- 
+
 instance HsProtobuf.Message ChaincodeInvocationSpec where
         encodeMessage _
           ChaincodeInvocationSpec{chaincodeInvocationSpecChaincodeSpec =
@@ -534,54 +534,54 @@ instance HsProtobuf.Message ChaincodeInvocationSpec where
                 (HsProtobuf.Single "chaincode_spec")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeInvocationSpec where
         toJSONPB (ChaincodeInvocationSpec f1)
           = (HsJSONPB.object ["chaincode_spec" .= f1])
         toEncodingPB (ChaincodeInvocationSpec f1)
           = (HsJSONPB.pairs ["chaincode_spec" .= f1])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeInvocationSpec where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeInvocationSpec"
                (\ obj ->
                   (Hs.pure ChaincodeInvocationSpec) <*> obj .: "chaincode_spec"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeInvocationSpec where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeInvocationSpec where
         parseJSON = HsJSONPB.parseJSONPB
- 
-instance HsJSONPB.ToSchema ChaincodeInvocationSpec where
-        declareNamedSchema _
-          = do let declare_chaincode_spec = HsJSONPB.declareSchemaRef
-               chaincodeInvocationSpecChaincodeSpec <- declare_chaincode_spec
-                                                         Proxy.Proxy
-               let _ = Hs.pure ChaincodeInvocationSpec <*>
-                         HsJSONPB.asProxy declare_chaincode_spec
-               Hs.return
-                 (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
-                                         Hs.Just "ChaincodeInvocationSpec",
-                                       HsJSONPB._namedSchemaSchema =
-                                         Hs.mempty{HsJSONPB._schemaParamSchema =
-                                                     Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
-                                                   HsJSONPB._schemaProperties =
-                                                     HsJSONPB.insOrdFromList
-                                                       [("chaincode_spec",
-                                                         chaincodeInvocationSpecChaincodeSpec)]}})
- 
+
+-- instance HsJSONPB.ToSchema ChaincodeInvocationSpec where
+--         declareNamedSchema _
+--           = do let declare_chaincode_spec = HsJSONPB.declareSchemaRef
+--                chaincodeInvocationSpecChaincodeSpec <- declare_chaincode_spec
+--                                                          Proxy.Proxy
+--                let _ = Hs.pure ChaincodeInvocationSpec <*>
+--                          HsJSONPB.asProxy declare_chaincode_spec
+--                Hs.return
+--                  (HsJSONPB.NamedSchema{HsJSONPB._namedSchemaName =
+--                                          Hs.Just "ChaincodeInvocationSpec",
+--                                        HsJSONPB._namedSchemaSchema =
+--                                          Hs.mempty{HsJSONPB._schemaParamSchema =
+--                                                      Hs.mempty{HsJSONPB._paramSchemaType =
+--                                                                  Hs.Just HsJSONPB.SwaggerObject},
+--                                                    HsJSONPB._schemaProperties =
+--                                                      HsJSONPB.insOrdFromList
+--                                                        [("chaincode_spec",
+--                                                          chaincodeInvocationSpecChaincodeSpec)]}})
+
 data LifecycleEvent = LifecycleEvent{lifecycleEventChaincodeName ::
                                      Hs.Text}
                     deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named LifecycleEvent where
         nameOf _ = (Hs.fromString "LifecycleEvent")
- 
+
 instance HsProtobuf.HasDefault LifecycleEvent
- 
+
 instance HsProtobuf.Message LifecycleEvent where
         encodeMessage _
           LifecycleEvent{lifecycleEventChaincodeName =
@@ -599,25 +599,25 @@ instance HsProtobuf.Message LifecycleEvent where
                 (HsProtobuf.Single "chaincode_name")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB LifecycleEvent where
         toJSONPB (LifecycleEvent f1)
           = (HsJSONPB.object ["chaincode_name" .= f1])
         toEncodingPB (LifecycleEvent f1)
           = (HsJSONPB.pairs ["chaincode_name" .= f1])
- 
+
 instance HsJSONPB.FromJSONPB LifecycleEvent where
         parseJSONPB
           = (HsJSONPB.withObject "LifecycleEvent"
                (\ obj -> (Hs.pure LifecycleEvent) <*> obj .: "chaincode_name"))
- 
+
 instance HsJSONPB.ToJSON LifecycleEvent where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON LifecycleEvent where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema LifecycleEvent where
         declareNamedSchema _
           = do let declare_chaincode_name = HsJSONPB.declareSchemaRef
@@ -630,21 +630,21 @@ instance HsJSONPB.ToSchema LifecycleEvent where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("chaincode_name",
                                                          lifecycleEventChaincodeName)]}})
- 
+
 data CDSData = CDSData{cdsdataHash :: Hs.ByteString,
                        cdsdataMetadatahash :: Hs.ByteString}
              deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named CDSData where
         nameOf _ = (Hs.fromString "CDSData")
- 
+
 instance HsProtobuf.HasDefault CDSData
- 
+
 instance HsProtobuf.Message CDSData where
         encodeMessage _
           CDSData{cdsdataHash = cdsdataHash,
@@ -672,26 +672,26 @@ instance HsProtobuf.Message CDSData where
                 (HsProtobuf.Single "metadatahash")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB CDSData where
         toJSONPB (CDSData f1 f2)
           = (HsJSONPB.object ["hash" .= f1, "metadatahash" .= f2])
         toEncodingPB (CDSData f1 f2)
           = (HsJSONPB.pairs ["hash" .= f1, "metadatahash" .= f2])
- 
+
 instance HsJSONPB.FromJSONPB CDSData where
         parseJSONPB
           = (HsJSONPB.withObject "CDSData"
                (\ obj ->
                   (Hs.pure CDSData) <*> obj .: "hash" <*> obj .: "metadatahash"))
- 
+
 instance HsJSONPB.ToJSON CDSData where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON CDSData where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema CDSData where
         declareNamedSchema _
           = do let declare_hash = HsJSONPB.declareSchemaRef
@@ -706,12 +706,12 @@ instance HsJSONPB.ToSchema CDSData where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("hash", cdsdataHash),
                                                         ("metadatahash", cdsdataMetadatahash)]}})
- 
+
 data ChaincodeData = ChaincodeData{chaincodeDataName :: Hs.Text,
                                    chaincodeDataVersion :: Hs.Text, chaincodeDataEscc :: Hs.Text,
                                    chaincodeDataVscc :: Hs.Text,
@@ -722,12 +722,12 @@ data ChaincodeData = ChaincodeData{chaincodeDataName :: Hs.Text,
                                    chaincodeDataInstantiationPolicy ::
                                    Hs.Maybe Common.Policies.SignaturePolicyEnvelope}
                    deriving (Hs.Show, Hs.Eq, Hs.Ord, Hs.Generic, Hs.NFData)
- 
+
 instance HsProtobuf.Named ChaincodeData where
         nameOf _ = (Hs.fromString "ChaincodeData")
- 
+
 instance HsProtobuf.HasDefault ChaincodeData
- 
+
 instance HsProtobuf.Message ChaincodeData where
         encodeMessage _
           ChaincodeData{chaincodeDataName = chaincodeDataName,
@@ -838,7 +838,7 @@ instance HsProtobuf.Message ChaincodeData where
                 (HsProtobuf.Single "instantiation_policy")
                 []
                 "")]
- 
+
 instance HsJSONPB.ToJSONPB ChaincodeData where
         toJSONPB (ChaincodeData f1 f2 f3 f4 f5 f6 f7 f8)
           = (HsJSONPB.object
@@ -850,7 +850,7 @@ instance HsJSONPB.ToJSONPB ChaincodeData where
                ["name" .= f1, "version" .= f2, "escc" .= f3, "vscc" .= f4,
                 "policy" .= f5, "data" .= f6, "id" .= f7,
                 "instantiation_policy" .= f8])
- 
+
 instance HsJSONPB.FromJSONPB ChaincodeData where
         parseJSONPB
           = (HsJSONPB.withObject "ChaincodeData"
@@ -862,14 +862,14 @@ instance HsJSONPB.FromJSONPB ChaincodeData where
                     <*> obj .: "data"
                     <*> obj .: "id"
                     <*> obj .: "instantiation_policy"))
- 
+
 instance HsJSONPB.ToJSON ChaincodeData where
         toJSON = HsJSONPB.toAesonValue
         toEncoding = HsJSONPB.toAesonEncoding
- 
+
 instance HsJSONPB.FromJSON ChaincodeData where
         parseJSON = HsJSONPB.parseJSONPB
- 
+
 instance HsJSONPB.ToSchema ChaincodeData where
         declareNamedSchema _
           = do let declare_name = HsJSONPB.declareSchemaRef
@@ -903,7 +903,7 @@ instance HsJSONPB.ToSchema ChaincodeData where
                                        HsJSONPB._namedSchemaSchema =
                                          Hs.mempty{HsJSONPB._schemaParamSchema =
                                                      Hs.mempty{HsJSONPB._paramSchemaType =
-                                                                 HsJSONPB.SwaggerObject},
+                                                                 Hs.Just HsJSONPB.SwaggerObject},
                                                    HsJSONPB._schemaProperties =
                                                      HsJSONPB.insOrdFromList
                                                        [("name", chaincodeDataName),

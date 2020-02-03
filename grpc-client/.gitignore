@@ -1,3 +1,5 @@
 .stack-work/
 grpc-client.cabal
 *~
+dist-newstyle
+cabal.project.local

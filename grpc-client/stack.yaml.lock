@@ -3,7 +3,35 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: grpc-haskell-core-0.0.0.0@sha256:4bacd90915321750db570042cd05ada01b9b83c79f6bf6b6ccdef1889b383efa,3306
+    pantry-tree:
+      size: 2330
+      sha256: 2b6324b0b2e9a3ca3ba98864945fb7c6bedad5fbe94ddfc1a1dbec1069d63bde
+  original:
+    hackage: grpc-haskell-core-0.0.0.0@sha256:4bacd90915321750db570042cd05ada01b9b83c79f6bf6b6ccdef1889b383efa,3306
+- completed:
+    hackage: grpc-haskell-0.0.1.0@sha256:453f89f3a3a846b31596b0f8f41ed3d71c747d59b208a043d75afd37a9f17308,6012
+    pantry-tree:
+      size: 1933
+      sha256: 4f0fe14943b118a4f26919ccf2e15ac9ff9640c8dd923cac63e9ce3338e4c39d
+  original:
+    hackage: grpc-haskell-0.0.1.0@sha256:453f89f3a3a846b31596b0f8f41ed3d71c747d59b208a043d75afd37a9f17308,6012
+- completed:
+    hackage: proto3-suite-0.4.0.0@sha256:51545a2592f22d1bf612a2f55ca3af8b0083fb5c620c8996bc6d48f742d1faa1,5720
+    pantry-tree:
+      size: 2972
+      sha256: f67473f90bac87cd65765571639149ddf3c88e52755c64d9e602a585a7c52571
+  original:
+    hackage: proto3-suite-0.4.0.0@sha256:51545a2592f22d1bf612a2f55ca3af8b0083fb5c620c8996bc6d48f742d1faa1,5720
+- completed:
+    hackage: proto3-wire-1.1.0@sha256:a8fe11ec7c8d01ded2224a1ca43c53cdc09adefd197a3b21ab14b543923840f3,1993
+    pantry-tree:
+      size: 666
+      sha256: c6b85d517d924449b19898c96ddc72added6272cbd9593472496e8c305b04fbd
+  original:
+    hackage: proto3-wire-1.1.0@sha256:a8fe11ec7c8d01ded2224a1ca43c53cdc09adefd197a3b21ab14b543923840f3,1993
 snapshots:
 - completed:
     size: 524164
