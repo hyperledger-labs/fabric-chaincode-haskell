@@ -21,7 +21,7 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     txTimestamp :: GooglePb.Timestamp,
     -- bytes of the X.509 identity of the originator of the transaction.
     creator :: ByteString,
-    -- information about the signed proposal
+    -- information about the signed proposalgit 
     signedProposal :: Pb.SignedProposal,
     transient :: MapStringBytes,
     binding :: MapStringBytes,
