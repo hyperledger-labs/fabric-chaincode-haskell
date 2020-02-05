@@ -1,4 +1,4 @@
-module Interfaces (Chaincode, ChaincodeStub, Error, StateQueryIterator, HistoryQueryIterator) where
+module Interfaces (Chaincode, ChaincodeStub, Error, MapStringBytes, StateQueryIterator, HistoryQueryIterator) where
 
 import Prelude
 import Data
@@ -10,6 +10,10 @@ import qualified Peer.Chaincode as Pb
 
 -- Error data simply contains a string that specifies the error that has occurred.
 data Error = Error { message :: String } deriving Show
+
+-- MapStringBytes is a synonym for the Map type whose keys are String and values
+-- 
+type MapStringBytes = Map.Map String ByteString
 
 
 
@@ -29,18 +33,18 @@ class Chaincode cc where
 -- The ChaincodeStuv type class defines the behaviour of the stub that is exposed to
 -- the the Chaincode types to interact with the ledger.
 class ChaincodeStub ccs where
-    getArgs :: ccs -> [ByteArray]
+    getArgs :: ccs -> [ByteString]
     getStringArgs :: ccs -> [String]
     getFunctionAndParameters :: ccs -> (String, [String]) 
-    getArgsSlice :: ccs -> Either Error ByteArray   
+    getArgsSlice :: ccs -> Either Error ByteString   
     getTxId :: ccs -> String
     getChannelId :: ccs -> String
     invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
-    getState :: ccs -> String -> Either Error ByteArray
-    putState :: ccs -> String -> ByteArray -> Maybe Error
+    getState :: ccs -> String -> Either Error ByteString
+    putState :: ccs -> String -> ByteString -> Maybe Error
     delState :: ccs -> String -> Maybe Error
-    setStateValidationParameter :: ccs -> String -> [ByteArray] -> Maybe Error
-    getStateValiationParameter :: ccs -> String -> Either Error [ByteArray]
+    setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
+    getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
     getStateByRange :: ccs -> String -> String -> Either Error StateQueryIterator
     getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
@@ -50,19 +54,19 @@ class ChaincodeStub ccs where
     getQueryResult :: ccs -> String -> Either Error StateQueryIterator
     getQueryResultWithPagination :: ccs -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     getHistoryForKey :: ccs -> Either Error HistoryQueryIterator
-    getPrivateData :: ccs -> String -> String -> Either Error ByteArray
-    getPrivateDataHash :: ccs -> String -> String -> Either Error ByteArray
-    putPrivateData :: ccs -> String -> String -> ByteArray -> Maybe Error
+    getPrivateData :: ccs -> String -> String -> Either Error ByteString
+    getPrivateDataHash :: ccs -> String -> String -> Either Error ByteString
+    putPrivateData :: ccs -> String -> String -> ByteString -> Maybe Error
     delPrivateData :: ccs -> String -> String -> Maybe Error
-    setPrivateDataValidationParameter :: ccs -> String -> String -> ByteArray -> Maybe Error
-    getPrivateDataValidationParameter :: ccs -> String -> String -> Either Error ByteArray
+    setPrivateDataValidationParameter :: ccs -> String -> String -> ByteString -> Maybe Error
+    getPrivateDataValidationParameter :: ccs -> String -> String -> Either Error ByteString
     getPrivateDataByRange :: ccs -> String -> String -> String -> Either Error StateQueryIterator
     getPrivateDataByPartialCompositeKey :: ccs -> String -> String -> [String] -> Either Error StateQueryIterator
     getPrivateDataQueryResult :: ccs -> String -> String -> Either Error StateQueryIterator
-    getCreator :: ccs -> Either Error ByteArray
-    getTransient :: ccs -> Either Error Map
-    getBinding :: ccs -> Either Error Map
-    getDecorations :: ccs -> Map
+    getCreator :: ccs -> Either Error ByteString
+    getTransient :: ccs -> Either Error MapStringBytes
+    getBinding :: ccs -> Either Error MapStringBytes
+    getDecorations :: ccs -> MapStringBytes
     getSignedProposal :: ccs -> Either Error Pb.SignedProposal
     getTxTimestamp :: ccs -> Either Error GooglePb.Timestamp
     setEvent :: ccs -> String -> ByteArray -> Maybe Error
