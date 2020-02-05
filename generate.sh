@@ -1,5 +1,6 @@
 #!/bin/sh
 
+compile-proto-file --proto ledger/queryresult/kv_query_result.proto --out grpc-client/src --includeDir google-protos --includeDir protos
 compile-proto-file --proto peer/chaincode_shim.proto --out grpc-client/src --includeDir google-protos --includeDir protos
 compile-proto-file --proto peer/chaincode_event.proto --out grpc-client/src --includeDir google-protos --includeDir protos
 compile-proto-file --proto peer/chaincode.proto --out grpc-client/src --includeDir google-protos --includeDir protos
