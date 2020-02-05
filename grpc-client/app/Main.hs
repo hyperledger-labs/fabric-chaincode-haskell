@@ -1,11 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs             #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE OverloadedLists   #-}
 
 module Main where
 
-import Lib
 import Peer.ChaincodeShim as Shim
 import Network.GRPC.HighLevel.Generated
+import qualified Network.GRPC.LowLevel.Client as Client
+import Proto3.Suite
 
 clientConfig :: ClientConfig
 clientConfig = ClientConfig { clientServerHost = "localhost"
@@ -17,32 +20,29 @@ clientConfig = ClientConfig { clientServerHost = "localhost"
 
 regMessage :: ChaincodeMessage
 regMessage = ChaincodeMessage{
-    chaincodeMessageType = ChaincodeMessage_TypeREGISTER,
+    chaincodeMessageType = Enumerated $ Right ChaincodeMessage_TypeREGISTER,
     chaincodeMessageTimestamp = Nothing
 }
 
 main :: IO ()
-main = withGRPCClient clientConfig $ \client -> do
-    -- contains chaincodeSupportRegister function
-    Shim.ChaincodeSupport{..} <- chaincodeSupportClient client
-    -- chaincodeSupportRegister :: request BiDiStreaming ChaincodeMessage ChaincodeMessage ->
-    --                                 IO (response BiDiStreaming ChaincodeMessage)
+main = withGRPCClient clientConfig grpcRunner
 
-    -- ClientBiDiResponse   :: MetadataMap -> StatusCode -> StatusDetails -> ClientResult 'BiDiStreaming response
-    -- ClientWriterResponse :: Maybe response -> MetadataMap -> MetadataMap -> StatusCode -> StatusDetails -> ClientResult 'ClientStreaming response
+grpcRunner :: Client.Client -> IO ()
+grpcRunner client = do
+        -- contains chaincodeSupportRegister function
+        Shim.ChaincodeSupport{..} <- chaincodeSupportClient client
 
-    -- ClientBiDiRequest :: TimeoutSeconds -> MetadataMap -> (LL.ClientCall -> MetadataMap -> StreamRecv response -> StreamSend request -> WritesDone -> IO ()) -> ClientRequest 'BiDiStreaming request response
-    -- ClientWriterRequest :: TimeoutSeconds -> MetadataMap -> (StreamSend request -> IO ()) -> ClientRequest 'ClientStreaming request response
 
-    ClientBiDiResponse _meta _status _details result
-        <- chaincodeSupportRegister $ ClientBiDiRequest 1 [] (\call mmap recv send _ -> do
-            send _
+        _ <- chaincodeSupportRegister $ ClientBiDiRequest 1 [] biDiRequestFn
 
-)
-    case result of
-        Just chaincodeMessage -> print "yay"
-        Nothing -> "Client stream failed"
-    print "testing"
+        print "testing"
 
--- main :: IO ()
--- main = someFunc
+
+
+-- biDiRequestFn :: ClientCall -> MetadataMap -> StreamRecv ChaincodeMessage ->
+--          StreamSend ChaincodeMessage -> WritesDone -> IO ()
+biDiRequestFn _call _mmap _recv send _ = do
+    e <- send regMessage :: IO (Either GRPCIOError ())
+    case e of
+        Left err -> error ("Error while streaming: " ++ show err)
+        Right _ -> pure ()
