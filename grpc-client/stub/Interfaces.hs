@@ -1,8 +1,7 @@
 module Interfaces (Chaincode, ChaincodeStub, Error, MapStringBytes, StateQueryIterator, HistoryQueryIterator) where
 
 import Prelude
-import Data
-import qualified Ledger.QueryResult as Pb
+import qualified Ledger.Queryresult as Pb
 import qualified Google.Protobuf.Timestamp as GooglePb
 import qualified Peer.Proposal as Pb
 import qualified Peer.ProposalResponse as Pb
@@ -12,7 +11,7 @@ import qualified Peer.Chaincode as Pb
 data Error = Error { message :: String } deriving Show
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
--- 
+--
 type MapStringBytes = Map.Map String ByteString
 
 
@@ -35,8 +34,8 @@ class Chaincode cc where
 class ChaincodeStub ccs where
     getArgs :: ccs -> [ByteString]
     getStringArgs :: ccs -> [String]
-    getFunctionAndParameters :: ccs -> (String, [String]) 
-    getArgsSlice :: ccs -> Either Error ByteString   
+    getFunctionAndParameters :: ccs -> (String, [String])
+    getArgsSlice :: ccs -> Either Error ByteString
     getTxId :: ccs -> String
     getChannelId :: ccs -> String
     invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
@@ -78,7 +77,7 @@ class ChaincodeStub ccs where
 -- The type class StateQueryIterator defines the behaviour of the types that expose functionalities
 -- for iterating over a set of key/value pairs returned by a range query.
 class StateQueryIterator sqi where
-    -- hasNext provides information on current status of the iterator and whether there are 
+    -- hasNext provides information on current status of the iterator and whether there are
     -- more elements in the collection key-value pairs returned by the result.
     hasNext :: sqi -> Bool
     -- close terminantes the iteration.
@@ -89,7 +88,7 @@ class StateQueryIterator sqi where
 -- The type class HistoryQueryIterator defines the behaviour of the types that expose functionalities
 -- for iteratogin over a set of key modifications that are associated to the history of a key.
 class HistoryQueryIterator hqi where
-    -- hasNext provides information on current status of the iterator and whether there are 
+    -- hasNext provides information on current status of the iterator and whether there are
     -- more elements in the collection key modifications returned by the result.
     hasNext :: sqi -> Bool
     -- close terminantes the iteration.
