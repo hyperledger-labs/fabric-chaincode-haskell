@@ -25,9 +25,9 @@ clientConfig = ClientConfig { clientServerHost = "localhost"
                             }
 regPayload :: Shim.ChaincodeID
 regPayload = Shim.ChaincodeID {
-    chaincodeIDName = "mycc",
-    chaincodeIDPath = "testpath",
-    chaincodeIDVersion = "1"
+    chaincodeIDName = "mycc:v0",
+    chaincodeIDPath = "chaincodedev/chaincode/chaincode_example02/go",
+    chaincodeIDVersion = "v0"
 }
 
 regMessage :: ChaincodeMessage
@@ -50,7 +50,8 @@ grpcRunner client = do
         Shim.ChaincodeSupport{..} <- chaincodeSupportClient client
 
 
-        _ <- chaincodeSupportRegister $ ClientBiDiRequest 5 [] biDiRequestFn
+        -- NOTE: This 2000 seconds is a hack till this gets resolved https://github.com/awakesecurity/gRPC-haskell/issues/100
+        _ <- chaincodeSupportRegister $ ClientBiDiRequest 2000 [] biDiRequestFn
 
         print "testing"
 
@@ -58,8 +59,16 @@ grpcRunner client = do
 
 -- biDiRequestFn :: ClientCall -> MetadataMap -> StreamRecv ChaincodeMessage ->
 --          StreamSend ChaincodeMessage -> WritesDone -> IO ()
-biDiRequestFn _call _mmap _recv send _ = do
+biDiRequestFn _call _mmap recv send done = do
     e <- send regMessage :: IO (Either GRPCIOError ())
     case e of
         Left err -> error ("Error while streaming: " ++ show err)
         Right _ -> trace "okie dokey" pure ()
+    mainLoop recv
+
+mainLoop recv = do
+    res <- recv
+    case res of
+        Left err -> error ("OH MY GOD: " ++ show err)
+        Right s ->  print ("Goodie:" ++ show s)
+    mainLoop recv
