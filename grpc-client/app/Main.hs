@@ -1,16 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE GADTs             #-}
 
 module Main where
 
 import Shim
+import Stub
+import Interfaces
 
 import Peer.ProposalResponse as Pb
+
+import Debug.Trace
 
 
 main :: IO ()
 main = start initFn
 
--- data Stub = Stub Int
-initFn :: Int -> Pb.Response
-initFn _ = initPayload
+initFn :: DefaultChaincodeStub -> Pb.Response
+initFn s = trace (getTxId s) initPayload

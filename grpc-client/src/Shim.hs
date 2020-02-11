@@ -4,19 +4,24 @@
 
 module Shim where
 
-import Peer.ChaincodeShim as Pb
-import Peer.Chaincode as Pb
-import Peer.ProposalResponse as Pb
+import Data.ByteString.Lazy as LBS
+import Data.ByteString.Char8 as BC
+import Data.Text.Encoding as TSE
+import Data.Text.Lazy
+
 import Network.GRPC.HighLevel.Generated
 import qualified Network.GRPC.LowLevel.Client as Client
 import Proto3.Suite as Suite
 import Proto3.Wire.Encode as Wire
 import Proto3.Wire.Decode as Wire
 import Proto3.Wire
-import Data.ByteString.Lazy as LBS
-import Data.ByteString.Char8 as BC
-import Data.Text.Encoding as TSE
-import Data.Text.Lazy
+
+import Peer.ChaincodeShim as Pb
+import Peer.Chaincode as Pb
+import Peer.ProposalResponse as Pb
+
+import Stub
+import Interfaces
 
 import Debug.Trace
 
@@ -63,10 +68,12 @@ initCompletedMessage txID chanID res = ChaincodeMessage{
     chaincodeMessageChannelId = chanID
 }
 
-start :: (Int -> Pb.Response) -> IO ()
+stub = DefaultChaincodeStub Nothing Nothing Nothing "HIHINI" Nothing Nothing Nothing Nothing Nothing Nothing
+
+start :: (DefaultChaincodeStub -> Pb.Response) -> IO ()
 start initFn = withGRPCClient clientConfig $ grpcRunner initFn
 
-grpcRunner :: (Int -> Pb.Response) -> Client.Client -> IO ()
+grpcRunner :: (DefaultChaincodeStub -> Pb.Response) -> Client.Client -> IO ()
 grpcRunner initFn client = do
         -- contains chaincodeSupportRegister function
         Pb.ChaincodeSupport{..} <- chaincodeSupportClient client
@@ -109,7 +116,7 @@ handleInit mes send initFn = let
     case eErrInput of
         Left err -> error (show err)
         Right Pb.ChaincodeInput{chaincodeInputArgs= args} -> do
-            e <- send (initCompletedMessage (chaincodeMessageTxid mes) (chaincodeMessageChannelId mes) (initFn 1)) :: IO (Either GRPCIOError ())
+            e <- send (initCompletedMessage (chaincodeMessageTxid mes) (chaincodeMessageChannelId mes) (initFn stub)) :: IO (Either GRPCIOError ())
             case e of
                 Left err -> error ("Error while streaming: " ++ show err)
                 Right _ -> trace "okie dokey init" pure ()
