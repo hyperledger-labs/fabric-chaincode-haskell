@@ -33,7 +33,7 @@ type MapStringBytes = Map String ByteString
 
 -- The ChaincodeStuv type class defines the behaviour of the stub that is exposed to
 -- the the Chaincode types to interact with the ledger.
-class ChaincodeStub ccs where
+class ChaincodeStubI ccs where
     -- getArgs :: ccs -> [ByteString]
     -- getStringArgs :: ccs -> [String]
     -- getFunctionAndParameters :: ccs -> (String, [String])

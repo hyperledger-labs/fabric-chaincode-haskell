@@ -39,8 +39,8 @@ regPayload = Pb.ChaincodeID {
     chaincodeIDVersion = "v0"
 }
 
-initPayload :: Pb.Response
-initPayload = Pb.Response{
+successPayload :: Pb.Response
+successPayload = Pb.Response{
     responseStatus = 200,
     responseMessage = "Successfully initialised",
     responsePayload = TSE.encodeUtf8 "40"
@@ -68,19 +68,25 @@ initCompletedMessage txID chanID res = ChaincodeMessage{
     chaincodeMessageChannelId = chanID
 }
 
-stub = DefaultChaincodeStub Nothing Nothing Nothing "HIHINI" Nothing Nothing Nothing Nothing Nothing Nothing
+data ChaincodeStub = ChaincodeStub {
+    initFn :: DefaultChaincodeStub -> Pb.Response,
+    invokeFn :: DefaultChaincodeStub -> Pb.Response
+}
 
-start :: (DefaultChaincodeStub -> Pb.Response) -> IO ()
-start initFn = withGRPCClient clientConfig $ grpcRunner initFn
+stub = DefaultChaincodeStub Nothing Nothing Nothing "HIHINI" Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
-grpcRunner :: (DefaultChaincodeStub -> Pb.Response) -> Client.Client -> IO ()
-grpcRunner initFn client = do
+-- TODO: start :: ChaincodeStub a => (a -> Pb.Response) -> IO ()
+start :: ChaincodeStub -> IO ()
+start chaincodeStub = withGRPCClient clientConfig $ grpcRunner chaincodeStub
+
+grpcRunner :: ChaincodeStub -> Client.Client -> IO ()
+grpcRunner chaincodeStub client = do
         -- contains chaincodeSupportRegister function
         Pb.ChaincodeSupport{..} <- chaincodeSupportClient client
 
 
         -- NOTE: This 2000 seconds is a hack till this gets resolved https://github.com/awakesecurity/gRPC-haskell/issues/100
-        _ <- chaincodeSupportRegister $ ClientBiDiRequest 2000 [] $ biDiRequestFn initFn
+        _ <- chaincodeSupportRegister $ ClientBiDiRequest 2000 [] $ biDiRequestFn chaincodeStub
 
         print "testing"
 
@@ -88,25 +94,26 @@ grpcRunner initFn client = do
 
 -- biDiRequestFn :: ClientCall -> MetadataMap -> StreamRecv ChaincodeMessage ->
 --          StreamSend ChaincodeMessage -> WritesDone -> IO ()
-biDiRequestFn initFn _call _mmap recv send _done = do
+biDiRequestFn chaincodeStub _call _mmap recv send _done = do
     e <- send regMessage :: IO (Either GRPCIOError ())
     case e of
         Left err -> error ("Error while streaming: " ++ show err)
         Right _ -> trace "okie dokey" pure ()
-    chatWithPeer recv send initFn
+    chatWithPeer recv send chaincodeStub
 
-chatWithPeer recv send initFn = do
+chatWithPeer recv send chaincodeStub = do
     res <- recv
     case res of
         Left err -> error ("OH MY GOD: " ++ show err)
-        Right (Just message) -> handler message send initFn
+        Right (Just message) -> handler message send chaincodeStub
         Right Nothing -> print "I got no message... wtf"
-    chatWithPeer recv send initFn
+    chatWithPeer recv send chaincodeStub
 
-handler message send initFn = case message of
+handler message send chaincodeStub = case message of
     ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeREGISTERED)} ->  print "YAY REGGED"
     ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeREADY)} ->  print "YAY READY"
-    ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeINIT)} ->  trace "YAY INIT" $ handleInit message send initFn
+    ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeINIT)} ->
+        trace "YAY INIT" $ handleInit message send (initFn chaincodeStub)
     s ->  print ("Goodie:" ++ show s)
 
 

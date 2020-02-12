@@ -11,6 +11,7 @@ import Interfaces
 -- one used to enable the chaincode to interact with ledger and chaincode
 -- execution services of the peer. A istance of this type is created for
 -- each of the chaincode invocations that are performed.
+-- TODO: remove all these maybes when the stub is being created properly
 data DefaultChaincodeStub = DefaultChaincodeStub {
     -- chaincode invocation arguments. serialised as arrays of bytes.
     args :: Maybe [ByteString],
@@ -20,6 +21,8 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     parameters :: Maybe [String],
     -- transaction identifier.
     txId :: String,
+    -- channel identifier
+    channelId:: Maybe String,
     -- timestamp of the transaction invocation
     txTimestamp :: Maybe Pb.Timestamp,
     -- bytes of the X.509 identity of the originator of the transaction.
@@ -36,7 +39,7 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
 -- effectively all the same.
 notImplemented = Error "Function not implemented"
 
-instance ChaincodeStub DefaultChaincodeStub where
+instance ChaincodeStubI DefaultChaincodeStub where
     -- getArgs :: ccs -> [ByteString]
     -- getArgs ccs = args
 
@@ -58,7 +61,7 @@ instance ChaincodeStub DefaultChaincodeStub where
     -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
     -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
     --
-    -- -- getState :: ccs -> String -> Either Error ByteString
+    -- getState :: ccs -> String -> Either Error ByteString
     -- getState ccs key = Left notImplemented
     --
     -- -- putState :: ccs -> String -> ByteString -> Maybe Error
