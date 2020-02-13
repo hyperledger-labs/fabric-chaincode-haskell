@@ -22,6 +22,7 @@ import Peer.ProposalResponse as Pb
 
 import Stub
 import Interfaces
+import Messages
 
 import Debug.Trace
 
@@ -32,41 +33,6 @@ clientConfig = ClientConfig { clientServerHost = "localhost"
                             , clientSSLConfig = Nothing
                             , clientAuthority = Nothing
                             }
-regPayload :: Pb.ChaincodeID
-regPayload = Pb.ChaincodeID {
-    chaincodeIDName = "mycc:v0",
-    chaincodeIDPath = "chaincodedev/chaincode/chaincode_example02/go",
-    chaincodeIDVersion = "v0"
-}
-
-successPayload :: Pb.Response
-successPayload = Pb.Response{
-    responseStatus = 200,
-    responseMessage = "Successfully initialised",
-    responsePayload = TSE.encodeUtf8 "40"
-}
-
-regMessage :: ChaincodeMessage
-regMessage = ChaincodeMessage{
-    chaincodeMessageType = Enumerated $ Right ChaincodeMessage_TypeREGISTER,
-    chaincodeMessageTimestamp = Nothing,
-    chaincodeMessagePayload = LBS.toStrict $ Wire.toLazyByteString $ encodeMessage (FieldNumber 1) regPayload,
-    chaincodeMessageTxid = "mytxid",
-    chaincodeMessageProposal = Nothing,
-    chaincodeMessageChaincodeEvent = Nothing,
-    chaincodeMessageChannelId = "myc"
-}
-
-initCompletedMessage :: Text -> Text -> Pb.Response -> ChaincodeMessage
-initCompletedMessage txID chanID res = ChaincodeMessage{
-    chaincodeMessageType = Enumerated $ Right ChaincodeMessage_TypeCOMPLETED,
-    chaincodeMessageTimestamp = Nothing,
-    chaincodeMessagePayload = LBS.toStrict $ Wire.toLazyByteString $ encodeMessage (FieldNumber 2) res,
-    chaincodeMessageTxid = txID,
-    chaincodeMessageProposal = Nothing,
-    chaincodeMessageChaincodeEvent = Nothing,
-    chaincodeMessageChannelId = chanID
-}
 
 data ChaincodeStub = ChaincodeStub {
     initFn :: DefaultChaincodeStub -> Pb.Response,

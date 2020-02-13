@@ -2,6 +2,7 @@ module Interfaces where
 
 import Data.Map
 import Data.ByteString
+import Data.Text.Lazy
 
 import qualified Ledger.Queryresult.KvQueryResult as Pb
 import qualified Google.Protobuf.Timestamp as GooglePb
@@ -38,10 +39,10 @@ class ChaincodeStubI ccs where
     -- getStringArgs :: ccs -> [String]
     -- getFunctionAndParameters :: ccs -> (String, [String])
     -- getArgsSlice :: ccs -> Either Error ByteString
-    getTxId :: ccs -> String
+    getTxId :: ccs -> Text
     -- getChannelId :: ccs -> String
     -- invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
-    getState :: ccs -> String -> Either Error ByteString
+    getState :: ccs -> Text -> Either Error ByteString
     -- putState :: ccs -> String -> ByteString -> Maybe Error
 
     -- delState :: ccs -> String -> Maybe Error
