@@ -73,7 +73,20 @@ data ChaincodeStub = ChaincodeStub {
     invokeFn :: DefaultChaincodeStub -> Pb.Response
 }
 
-stub = DefaultChaincodeStub Nothing Nothing Nothing "HIHINI" Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+-- Env to be accessible from anywhere in the application, this means stub functions can get access to env
+-- without them needing to be passed from userland main function
+-- data Env = Env {
+--     send :: StreamSend ChaincodeMessage,
+--     recv :: StreamRecv ChaincodeMessage
+-- }
+--
+-- getSend :: Reader a (StreamSend ChaincodeMessage)
+-- getSend = pure $ send
+
+-- data HandlerType e a = HandlerType {
+--     runHandlerType :: Env -> IO (Either e a)
+-- }
+
 
 -- TODO: start :: ChaincodeStub a => (a -> Pb.Response) -> IO ()
 start :: ChaincodeStub -> IO ()
@@ -105,20 +118,23 @@ chatWithPeer recv send chaincodeStub = do
     res <- recv
     case res of
         Left err -> error ("OH MY GOD: " ++ show err)
-        Right (Just message) -> handler message send chaincodeStub
+        Right (Just message) -> handler message recv send chaincodeStub
         Right Nothing -> print "I got no message... wtf"
     chatWithPeer recv send chaincodeStub
 
-handler message send chaincodeStub = case message of
+handler message recv send chaincodeStub = case message of
     ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeREGISTERED)} ->  print "YAY REGGED"
     ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeREADY)} ->  print "YAY READY"
     ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeINIT)} ->
-        trace "YAY INIT" $ handleInit message send (initFn chaincodeStub)
+        trace "YAY INIT" $ handleInit message recv send (initFn chaincodeStub)
+    -- ChaincodeMessage{chaincodeMessageType= Enumerated (Right ChaincodeMessage_TypeTRANSACTION)} ->
+    --     trace "YAY TRANSACTION" $ handleInvoke message recv send (invokeFn chaincodeStub)
     s ->  print ("Goodie:" ++ show s)
 
 
-handleInit mes send initFn = let
+handleInit mes recv send initFn = let
     eErrInput = Suite.fromByteString (chaincodeMessagePayload mes) :: Either ParseError Pb.ChaincodeInput
+    stub  = DefaultChaincodeStub Nothing Nothing Nothing "HIHINI" Nothing Nothing Nothing Nothing Nothing Nothing Nothing recv send
     in
     case eErrInput of
         Left err -> error (show err)

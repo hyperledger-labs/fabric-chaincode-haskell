@@ -2,6 +2,9 @@ module Stub where
 
 import Data.ByteString
 
+import Peer.ChaincodeShim
+
+import Network.GRPC.HighLevel
 import Google.Protobuf.Timestamp as Pb
 import Peer.Proposal as Pb
 
@@ -31,7 +34,9 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     signedProposal :: Maybe Pb.SignedProposal,
     transient :: Maybe MapStringBytes,
     binding :: Maybe MapStringBytes,
-    decorations :: Maybe MapStringBytes
+    decorations :: Maybe MapStringBytes,
+    recvStream :: StreamRecv ChaincodeMessage,
+    sendStream :: StreamSend ChaincodeMessage
 }
 
 -- Default error value used for functions that are not implemented
@@ -62,7 +67,7 @@ instance ChaincodeStubI DefaultChaincodeStub where
     -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
     --
     -- getState :: ccs -> String -> Either Error ByteString
-    -- getState ccs key = Left notImplemented
+    getState ccs key = Left notImplemented
     --
     -- -- putState :: ccs -> String -> ByteString -> Maybe Error
     -- putState ccs key value = Right notImplemented

@@ -41,7 +41,7 @@ class ChaincodeStubI ccs where
     getTxId :: ccs -> String
     -- getChannelId :: ccs -> String
     -- invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
-    -- getState :: ccs -> String -> Either Error ByteString
+    getState :: ccs -> String -> Either Error ByteString
     -- putState :: ccs -> String -> ByteString -> Maybe Error
 
     -- delState :: ccs -> String -> Maybe Error
