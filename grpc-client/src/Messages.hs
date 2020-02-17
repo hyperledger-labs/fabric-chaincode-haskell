@@ -33,10 +33,10 @@ successPayload = Pb.Response
   , responsePayload = TSE.encodeUtf8 "40"
   }
 
-failPayload :: Pb.Response
-failPayload = Pb.Response
+failPayload :: Text -> Pb.Response
+failPayload msg = Pb.Response
   { responseStatus  = 500
-  , responseMessage = "Failure!"
+  , responseMessage = fromStrict msg
   , responsePayload = TSE.encodeUtf8 "41"
   }
 
