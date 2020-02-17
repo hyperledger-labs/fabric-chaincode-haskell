@@ -2,18 +2,19 @@
 
 module Stub where
 
-import Data.ByteString
-import Data.Text.Lazy
+import           Data.ByteString
+import           Data.Text.Lazy
 
-import Peer.ChaincodeShim
+import           Peer.ChaincodeShim
 
-import Network.GRPC.HighLevel
-import Google.Protobuf.Timestamp as Pb
-import Peer.Proposal as Pb
-import Proto3.Suite
+import           Network.GRPC.HighLevel
+import           Google.Protobuf.Timestamp     as Pb
+import           Peer.Proposal                 as Pb
+import           Proto3.Suite
 
-import Interfaces
-import Messages
+import           Interfaces
+import           Messages
+import           Error
 
 -- Algebraic Type represeting the DefaultChaincodeStub.  This is the
 -- one used to enable the chaincode to interact with ledger and chaincode
@@ -49,14 +50,17 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
 -- effectively all the same.
 notImplemented = error "Function not implemented"
 
--- listenForResponse :: StreamRecv ChaincodeMessage -> Either Error ByteString
--- listenForResponse recv = do
---     res <- recv
---     case res of
---         Left err -> Left err
---         Right (Just ChaincodeMessage{chaincodeMessageType=Enumerated (Right ChaincodeMessage_TypeRESPONSE), chaincodeMessagePayload=payload}) -> Right payload
---         Right (Just _) -> listenForResponse recv
---         Right Nothing -> Left "I got no message... wtf"
+listenForResponse :: StreamRecv ChaincodeMessage -> IO (Either Error ByteString)
+listenForResponse recv = do
+  res <- recv
+  case res of
+    Left err -> pure $ Left $ GRPCError err
+    Right (Just ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeRESPONSE), chaincodeMessagePayload = payload })
+      -> pure $ Right payload
+    Right (Just ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeERROR), chaincodeMessagePayload = payload })
+      -> pure $ Left $ Error "Peer failed to do what you wanted"
+    Right (Just _) -> listenForResponse recv
+    Right Nothing  -> pure $ Left $ Error "I got no message... wtf"
 
 instance ChaincodeStubI DefaultChaincodeStub where
     -- getArgs :: ccs -> [ByteString]
@@ -75,27 +79,34 @@ instance ChaincodeStubI DefaultChaincodeStub where
     getTxId css = txId css
 
     -- getChannelId :: ccs -> String
-    -- getChannelId ccs = channelId
+    getChannelId ccs = channelId ccs
 
     -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
     -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
     --
-    -- getState :: ccs -> String -> Either Error ByteString
+    -- getState :: ccs -> String -> IO (Either Error ByteString)
     getState ccs key = let
         payload = getStatePayload key
-        message = buildChaincodeMessage (Enumerated $ Right ChaincodeMessage_TypeGET_STATE) payload (txId ccs) (channelId ccs)
+        message = buildChaincodeMessage (GET_STATE) payload (txId ccs) (channelId ccs)
         in
         do
-        e <- ((sendStream ccs) message) :: IO (Either GRPCIOError ())
+        e <- ((sendStream ccs) message)
         case e of
             Left err -> error ("Error while streaming: " ++ show err)
             Right _ -> pure ()
-        -- listenForResponse (recvStream ccs)
-        Left $ Error "oh no"
+        listenForResponse (recvStream ccs)
 
-    --
     -- -- putState :: ccs -> String -> ByteString -> Maybe Error
-    -- putState ccs key value = Right notImplemented
+    putState ccs key value = let
+        payload = putStatePayload key value
+        message = buildChaincodeMessage PUT_STATE payload (txId ccs) (channelId ccs)
+        in
+        do
+        e <- ((sendStream ccs) message)
+        case e of
+            Left err -> error ("Error while streaming: " ++ show err)
+            Right _ -> pure ()
+        listenForResponse (recvStream ccs)
     --
     -- -- delState :: ccs -> String -> Maybe Error
     -- delState ccs key = Right notImplemented
