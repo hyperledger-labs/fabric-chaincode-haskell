@@ -43,7 +43,7 @@ class ChaincodeStubI ccs where
     getArgs :: ccs -> Vector ByteString
     getStringArgs :: ccs -> [Text]
     getFunctionAndParameters :: ccs -> Either Error (Text, [Text])
-    -- getArgsSlice :: ccs -> Either Error ByteString
+    getArgsSlice :: ccs -> Either Error ByteString
     getTxId :: ccs -> Text
     getChannelId :: ccs -> Text
     -- invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
