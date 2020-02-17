@@ -10,9 +10,7 @@ import           Error
 
 import           Peer.ProposalResponse         as Pb
 
-import           Data.Text                      ( Text
-                                                , unpack
-                                                )
+import           Data.Text                      ( Text )
 import           Data.Text.Encoding             ( decodeUtf8
                                                 , encodeUtf8
                                                 )
@@ -24,44 +22,68 @@ import           Debug.Trace
 main :: IO ()
 main = Shim.start chaincodeStub
 
+chaincodeStub :: ChaincodeStub
 chaincodeStub = ChaincodeStub {initFn = initFunc, invokeFn = invokeFunc}
 
 initFunc :: DefaultChaincodeStub -> IO Pb.Response
-initFunc s =
-  let response = putState s (decodeUtf8 $ getArgs s ! 1) (getArgs s ! 2)
-  in  do
-        e <- response :: IO (Either Error ByteString)
-        case e of
-          Left err ->
-            trace ("Error putting state" ++ (show err)) (pure successPayload)
-          Right _ -> trace "Put state seemed to work!" (pure successPayload)
+initFunc s
+  = let initArgs = getArgs s
+    in
+      if (Prelude.length initArgs == 3)
+        then
+          let response = putState s (decodeUtf8 $ initArgs ! 1) (initArgs ! 2)
+          in  do
+                e <- response :: IO (Either Error ByteString)
+                case e of
+                  Left err -> trace
+                    ("Error putting state" ++ (show err))
+                    (pure $ failPayload "Error putting state")
+                  Right _ ->
+                    trace "Put state seemed to work!" (pure successPayload)
+        else trace
+          "Wrong arg number supplied for init"
+          ( pure
+          $ failPayload
+              "Wrong number of arguments supplied for init. Two arguments needed"
+          )
 
 invokeFunc :: DefaultChaincodeStub -> IO Pb.Response
 invokeFunc s =
   let e = getFunctionAndParameters s
   in  case e of
-        Left  _                   -> pure failPayload
+        Left _ -> pure $ failPayload "Error getting function and parameters"
         Right ("get", parameters) -> fetchState s parameters
         Right ("put", parameters) -> createState s parameters
+        Right (_, _) -> pure $ failPayload "No function with that name found"
 
--- TODO check that args length is 1
 fetchState :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
-fetchState s args =
-  let response = getState s (head args)
-  in  do
-        e <- response
-        case e of
-          Left err ->
-            trace ("Error getting state" ++ (show err)) (pure successPayload)
-          Right a -> trace (BSU.toString a) (pure successPayload)
+fetchState s params = if (Prelude.length params == 1)
+  then
+    let response = getState s (head params)
+    in  do
+          e <- response
+          case e of
+            Left err -> trace ("Error getting state" ++ (show err))
+                              (pure $ failPayload "Error getting state")
+            Right a -> trace (BSU.toString a) (pure successPayload)
+  else trace
+    "Wrong number of arguments supplied for get. One argument needed"
+    (pure $ failPayload
+      "Wrong number of arguments supplied for get. One argument needed"
+    )
 
--- TODO check that args length is > 2
 createState :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
-createState s args =
-  let response = putState s (head args) (head $ tail args)
-  in  do
-        e <- response :: IO (Either Error ByteString)
-        case e of
-          Left err ->
-            trace ("Error putting state" ++ (show err)) (pure successPayload)
-          Right _ -> trace "Put state seemed to work!" (pure successPayload)
+createState s params = if (Prelude.length params == 2)
+  then
+    let response = putState s (head params) (encodeUtf8 $ head $ tail params)
+    in  do
+          e <- response :: IO (Either Error ByteString)
+          case e of
+            Left err -> trace ("Error putting state" ++ (show err))
+                              (pure $ failPayload "Error putting state")
+            Right _ -> trace "Put state seemed to work!" (pure successPayload)
+  else trace
+    "Wrong number of arguments supplied for put. Two arguments needed"
+    (pure $ failPayload
+      "Wrong number of arguments supplied for put. Two arguments needed"
+    )
