@@ -3,7 +3,8 @@
 module Stub where
 
 import           Data.ByteString
-import           Data.Text.Lazy
+import           Data.Text
+import           Data.Vector                    ( Vector )
 
 import           Peer.ChaincodeShim
 
@@ -23,7 +24,7 @@ import           Error
 -- TODO: remove all these maybes when the stub is being created properly
 data DefaultChaincodeStub = DefaultChaincodeStub {
     -- chaincode invocation arguments. serialised as arrays of bytes.
-    args :: Maybe [ByteString],
+    args :: Vector ByteString,
     -- name of the function being invoked.
     function :: Maybe String,
     -- arguments of the function idenfied by the chaincode invocation.
@@ -64,7 +65,7 @@ listenForResponse recv = do
 
 instance ChaincodeStubI DefaultChaincodeStub where
     -- getArgs :: ccs -> [ByteString]
-    -- getArgs ccs = args
+    getArgs ccs = args ccs
 
     -- getStringArgs :: ccs -> [String]
     -- getStringArgs ccs = map (\_ ) args
@@ -84,7 +85,7 @@ instance ChaincodeStubI DefaultChaincodeStub where
     -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
     -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
     --
-    -- getState :: ccs -> String -> IO (Either Error ByteString)
+    -- getState :: ccs -> Text -> IO (Either Error ByteString)
     getState ccs key = let
         payload = getStatePayload key
         message = buildChaincodeMessage (GET_STATE) payload (txId ccs) (channelId ccs)
@@ -96,7 +97,7 @@ instance ChaincodeStubI DefaultChaincodeStub where
             Right _ -> pure ()
         listenForResponse (recvStream ccs)
 
-    -- -- putState :: ccs -> String -> ByteString -> Maybe Error
+    -- -- putState :: ccs -> Text -> ByteString -> Maybe Error
     putState ccs key value = let
         payload = putStatePayload key value
         message = buildChaincodeMessage PUT_STATE payload (txId ccs) (channelId ccs)

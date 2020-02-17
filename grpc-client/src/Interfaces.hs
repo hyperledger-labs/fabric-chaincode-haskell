@@ -2,7 +2,8 @@ module Interfaces where
 
 import           Data.Map
 import           Data.ByteString
-import           Data.Text.Lazy
+import           Data.Text
+import           Data.Vector
 
 import qualified Ledger.Queryresult.KvQueryResult
                                                as Pb
@@ -39,7 +40,7 @@ type MapStringBytes = Map String ByteString
 -- The ChaincodeStuv type class defines the behaviour of the stub that is exposed to
 -- the the Chaincode types to interact with the ledger.
 class ChaincodeStubI ccs where
-    -- getArgs :: ccs -> [ByteString]
+    getArgs :: ccs -> Vector ByteString
     -- getStringArgs :: ccs -> [String]
     -- getFunctionAndParameters :: ccs -> (String, [String])
     -- getArgsSlice :: ccs -> Either Error ByteString
