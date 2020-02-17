@@ -73,8 +73,6 @@ grpcRunner chaincodeStub client = do
 
   print "testing"
 
-
-
 -- biDiRequestFn :: ClientCall -> MetadataMap -> StreamRecv ChaincodeMessage ->
 --          StreamSend ChaincodeMessage -> WritesDone -> IO ()
 biDiRequestFn chaincodeStub _call _mmap recv send _done = do
@@ -128,8 +126,6 @@ handleInit mes recv send initFn
         Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
           let stub = DefaultChaincodeStub
                 args
-                Nothing
-                Nothing
                 (toStrict $ chaincodeMessageTxid mes)
                 (toStrict $ chaincodeMessageChannelId mes)
                 Nothing
@@ -170,8 +166,6 @@ handleInvoke mes recv send invokeFn
         Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
           let stub = DefaultChaincodeStub
                 args
-                Nothing
-                Nothing
                 (toStrict $ chaincodeMessageTxid mes)
                 (toStrict $ chaincodeMessageChannelId mes)
                 Nothing

@@ -41,8 +41,8 @@ type MapStringBytes = Map String ByteString
 -- the the Chaincode types to interact with the ledger.
 class ChaincodeStubI ccs where
     getArgs :: ccs -> Vector ByteString
-    -- getStringArgs :: ccs -> [String]
-    -- getFunctionAndParameters :: ccs -> (String, [String])
+    getStringArgs :: ccs -> [Text]
+    getFunctionAndParameters :: ccs -> Either Error (Text, [Text])
     -- getArgsSlice :: ccs -> Either Error ByteString
     getTxId :: ccs -> Text
     getChannelId :: ccs -> Text
