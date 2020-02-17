@@ -2,10 +2,11 @@
 
 module Messages where
 
-import           Data.ByteString.Lazy          as LBS
+import qualified Data.ByteString.Lazy          as LBS
 import           Data.ByteString               as BS
-import           Data.Text.Lazy
+import           Data.Text
 import           Data.Text.Encoding            as TSE
+import           Data.Text.Lazy                 ( fromStrict )
 
 import           Network.GRPC.HighLevel.Generated
 import qualified Network.GRPC.LowLevel.Client  as Client
@@ -33,11 +34,12 @@ successPayload = Pb.Response
   }
 
 getStatePayload :: Text -> Pb.GetState
-getStatePayload key = Pb.GetState {getStateKey = key, getStateCollection = ""}
+getStatePayload key =
+  Pb.GetState {getStateKey = fromStrict key, getStateCollection = ""}
 
 putStatePayload :: Text -> BS.ByteString -> Pb.PutState
 putStatePayload key value = Pb.PutState
-  { putStateKey        = key
+  { putStateKey        = fromStrict key
   , putStateValue      = value
   , putStateCollection = ""
   }
@@ -54,32 +56,20 @@ buildChaincodeMessage mesType payload txid chanID = ChaincodeMessage
   , chaincodeMessagePayload        = LBS.toStrict
     $ Wire.toLazyByteString
     $ encodeMessage (FieldNumber 1) payload
-  , chaincodeMessageTxid           = txid
+  , chaincodeMessageTxid           = fromStrict txid
   , chaincodeMessageProposal       = Nothing
   , chaincodeMessageChaincodeEvent = Nothing
-  , chaincodeMessageChannelId      = chanID
+  , chaincodeMessageChannelId      = fromStrict chanID
   }
 
 regMessage :: ChaincodeMessage
 regMessage = buildChaincodeMessage REGISTER regPayload "mytxid" "myc"
 
-initCompletedMessage :: Text -> Text -> Pb.Response -> ChaincodeMessage
-initCompletedMessage txID chanID res = ChaincodeMessage
-  { chaincodeMessageType = Enumerated $ Right ChaincodeMessage_TypeCOMPLETED
-  , chaincodeMessageTimestamp      = Nothing
-  , chaincodeMessagePayload        = LBS.toStrict
-    $ Wire.toLazyByteString
-    $ encodeMessage (FieldNumber 2) res
-  , chaincodeMessageTxid           = txID
-  , chaincodeMessageProposal       = Nothing
-  , chaincodeMessageChaincodeEvent = Nothing
-  , chaincodeMessageChannelId      = chanID
-  }
-
-data CCMessageType = GET_STATE | PUT_STATE | REGISTER
+data CCMessageType = GET_STATE | PUT_STATE | REGISTER | COMPLETED
 
 getCCMessageType :: CCMessageType -> Enumerated Pb.ChaincodeMessage_Type
 getCCMessageType ccMessageType = case ccMessageType of
   GET_STATE -> Enumerated $ Right ChaincodeMessage_TypeGET_STATE
   PUT_STATE -> Enumerated $ Right ChaincodeMessage_TypePUT_STATE
   REGISTER  -> Enumerated $ Right ChaincodeMessage_TypeREGISTER
+  COMPLETED -> Enumerated $ Right ChaincodeMessage_TypeCOMPLETED

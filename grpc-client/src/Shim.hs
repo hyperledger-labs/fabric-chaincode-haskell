@@ -4,10 +4,11 @@
 
 module Shim where
 
-import           Data.ByteString.Lazy          as LBS
+import qualified Data.ByteString.Lazy          as LBS
 import           Data.ByteString.Char8         as BC
 import           Data.Text.Encoding            as TSE
-import           Data.Text.Lazy
+import           Data.Text
+import           Data.Text.Lazy                 ( toStrict )
 
 import           Network.GRPC.HighLevel.Generated
 import           Network.GRPC.HighLevel
@@ -116,37 +117,41 @@ handleInit
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInit mes recv send initFn =
-  let eErrInput =
-        Suite.fromByteString (chaincodeMessagePayload mes) :: Either
-            ParseError
-            Pb.ChaincodeInput
-      stub = DefaultChaincodeStub Nothing
-                                  Nothing
-                                  Nothing
-                                  (chaincodeMessageTxid mes)
-                                  (chaincodeMessageChannelId mes)
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  recv
-                                  send
-  in  case eErrInput of
+handleInit mes recv send initFn
+  = let eErrInput =
+          Suite.fromByteString (chaincodeMessagePayload mes) :: Either
+              ParseError
+              Pb.ChaincodeInput
+    in
+      case eErrInput of
         Left  err -> error (show err)
         Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
+          let stub = DefaultChaincodeStub
+                args
+                Nothing
+                Nothing
+                (toStrict $ chaincodeMessageTxid mes)
+                (toStrict $ chaincodeMessageChannelId mes)
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                recv
+                send
           response <- initFn stub
           e        <-
             send
-              (initCompletedMessage (chaincodeMessageTxid mes)
-                                    (chaincodeMessageChannelId mes)
-                                    (response)
+              (buildChaincodeMessage COMPLETED
+                                     response
+                                     (getTxId stub)
+                                     (getChannelId stub)
               ) :: IO (Either GRPCIOError ())
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
             Right _   -> trace "okie dokey init" pure ()
+
 
 handleInvoke
   :: ChaincodeMessage
@@ -154,33 +159,36 @@ handleInvoke
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInvoke mes recv send invokeFn =
-  let eErrInput =
-        Suite.fromByteString (chaincodeMessagePayload mes) :: Either
-            ParseError
-            Pb.ChaincodeInput
-      stub = DefaultChaincodeStub Nothing
-                                  Nothing
-                                  Nothing
-                                  (chaincodeMessageTxid mes)
-                                  (chaincodeMessageChannelId mes)
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  recv
-                                  send
-  in  case eErrInput of
+handleInvoke mes recv send invokeFn
+  = let eErrInput =
+          Suite.fromByteString (chaincodeMessagePayload mes) :: Either
+              ParseError
+              Pb.ChaincodeInput
+    in
+      case eErrInput of
         Left  err -> error (show err)
         Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
+          let stub = DefaultChaincodeStub
+                args
+                Nothing
+                Nothing
+                (toStrict $ chaincodeMessageTxid mes)
+                (toStrict $ chaincodeMessageChannelId mes)
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                recv
+                send
           response <- invokeFn stub
           e        <-
             send
-              (initCompletedMessage (chaincodeMessageTxid mes)
-                                    (chaincodeMessageChannelId mes)
-                                    (response)
+              (buildChaincodeMessage COMPLETED
+                                     response
+                                     (getTxId stub)
+                                     (getChannelId stub)
               ) :: IO (Either GRPCIOError ())
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
