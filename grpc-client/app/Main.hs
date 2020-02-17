@@ -54,6 +54,7 @@ invokeFunc s =
         Left _ -> pure $ failPayload "Error getting function and parameters"
         Right ("get", parameters) -> fetchState s parameters
         Right ("put", parameters) -> createState s parameters
+        Right ("getArgSlice", _) -> getArgSlice s
         Right (_, _) -> pure $ failPayload "No function with that name found"
 
 fetchState :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
@@ -87,3 +88,12 @@ createState s params = if (Prelude.length params == 2)
     (pure $ failPayload
       "Wrong number of arguments supplied for put. Two arguments needed"
     )
+
+getArgSlice :: DefaultChaincodeStub -> IO Pb.Response
+getArgSlice s =
+  let argSlice = getArgsSlice s
+  in  case argSlice of
+        Left err -> trace ("Error in getArgsSlice " ++ (show err))
+                          (pure $ failPayload "Error getting argslice")
+        Right bs -> trace ("getArgSlice bytestring: " ++ (toString bs))
+                          (pure $ successPayload)

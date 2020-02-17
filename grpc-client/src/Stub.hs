@@ -3,13 +3,15 @@
 module Stub where
 
 
-import           Data.ByteString
+import           Data.ByteString               as BS
 import           Data.Text
 import           Data.Text.Encoding
 import           Data.Vector                   as Vector
                                                 ( Vector
                                                 , length
                                                 , toList
+                                                , foldr
+                                                , empty
                                                 )
 
 import           Peer.ChaincodeShim
@@ -70,7 +72,7 @@ listenForResponse recv = do
     Right Nothing  -> pure $ Left $ Error "I got no message... wtf"
 
 instance ChaincodeStubI DefaultChaincodeStub where
-    -- getArgs :: ccs -> [ByteString]
+    -- getArgs :: ccs -> Vector ByteString
     getArgs ccs = args ccs
 
     -- getStringArgs :: ccs -> [Text]
@@ -84,7 +86,7 @@ instance ChaincodeStubI DefaultChaincodeStub where
         if (Prelude.length args >= 1 ) then (Right $ (Prelude.head args, Prelude.tail args)) else (Left $ InvalidArgs)
 
     -- getArgsSlice :: ccs -> Either Error ByteString
-    -- getArgsSlice ccs  = Left notImplemented
+    getArgsSlice ccs = Right $ Vector.foldr BS.append BS.empty $ getArgs ccs
 
     -- getTxId :: css -> String
     getTxId css = txId css
