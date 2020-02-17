@@ -26,6 +26,7 @@ dependencies:
 - text
 - deepseq
 - containers
+- utf8-string
 
 library:
   source-dirs: src

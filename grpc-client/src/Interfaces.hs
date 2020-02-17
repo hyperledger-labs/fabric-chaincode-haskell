@@ -1,17 +1,21 @@
 module Interfaces where
 
-import Data.Map
-import Data.ByteString
-import Data.Text.Lazy
+import           Data.Map
+import           Data.ByteString
+import           Data.Text.Lazy
 
-import qualified Ledger.Queryresult.KvQueryResult as Pb
-import qualified Google.Protobuf.Timestamp as GooglePb
-import qualified Peer.Proposal as Pb
-import qualified Peer.ProposalResponse as Pb
-import qualified Peer.Chaincode as Pb
+import qualified Ledger.Queryresult.KvQueryResult
+                                               as Pb
+import qualified Google.Protobuf.Timestamp     as GooglePb
+import qualified Peer.Proposal                 as Pb
+import qualified Peer.ProposalResponse         as Pb
+import qualified Peer.Chaincode                as Pb
+
+
+import           Error
 
 -- Error data simply contains a string that specifies the error that has occurred.
-data Error = Error { message :: String } deriving Show
+-- data Error = Error { message :: String } deriving Show
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
 --
@@ -40,10 +44,10 @@ class ChaincodeStubI ccs where
     -- getFunctionAndParameters :: ccs -> (String, [String])
     -- getArgsSlice :: ccs -> Either Error ByteString
     getTxId :: ccs -> Text
-    -- getChannelId :: ccs -> String
+    getChannelId :: ccs -> Text
     -- invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
-    getState :: ccs -> Text -> Either Error ByteString
-    -- putState :: ccs -> String -> ByteString -> Maybe Error
+    getState :: ccs -> Text -> IO (Either Error ByteString)
+    putState :: ccs -> Text -> ByteString -> IO (Either Error ByteString)
 
     -- delState :: ccs -> String -> Maybe Error
     -- setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
