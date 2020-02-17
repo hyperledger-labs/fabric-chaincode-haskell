@@ -33,6 +33,13 @@ successPayload = Pb.Response
   , responsePayload = TSE.encodeUtf8 "40"
   }
 
+failPayload :: Pb.Response
+failPayload = Pb.Response
+  { responseStatus  = 500
+  , responseMessage = "Failure!"
+  , responsePayload = TSE.encodeUtf8 "41"
+  }
+
 getStatePayload :: Text -> Pb.GetState
 getStatePayload key =
   Pb.GetState {getStateKey = fromStrict key, getStateCollection = ""}

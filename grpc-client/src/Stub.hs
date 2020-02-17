@@ -2,9 +2,15 @@
 
 module Stub where
 
+
 import           Data.ByteString
 import           Data.Text
-import           Data.Vector                    ( Vector )
+import           Data.Text.Encoding
+import           Data.Vector                   as Vector
+                                                ( Vector
+                                                , length
+                                                , toList
+                                                )
 
 import           Peer.ChaincodeShim
 
@@ -25,10 +31,10 @@ import           Error
 data DefaultChaincodeStub = DefaultChaincodeStub {
     -- chaincode invocation arguments. serialised as arrays of bytes.
     args :: Vector ByteString,
-    -- name of the function being invoked.
-    function :: Maybe String,
-    -- arguments of the function idenfied by the chaincode invocation.
-    parameters :: Maybe [String],
+    -- -- name of the function being invoked.
+    -- function :: Maybe Text,
+    -- -- arguments of the function idenfied by the chaincode invocation.
+    -- parameters :: Maybe [String],
     -- transaction identifier.
     txId :: Text,
     -- channel identifier
@@ -67,11 +73,15 @@ instance ChaincodeStubI DefaultChaincodeStub where
     -- getArgs :: ccs -> [ByteString]
     getArgs ccs = args ccs
 
-    -- getStringArgs :: ccs -> [String]
-    -- getStringArgs ccs = map (\_ ) args
+    -- getStringArgs :: ccs -> [Text]
+    getStringArgs ccs = let args = getArgs ccs
+      in
+        toList $ decodeUtf8 <$> args
 
-    -- getFunctionAndParameters :: ccs -> (String, [String])
-    -- getFunctionAndParameters ccs = (function, parameters)
+    -- getFunctionAndParameters :: ccs -> Either Error (Text, [Text])
+    getFunctionAndParameters ccs = let args = getStringArgs ccs
+      in
+        if (Prelude.length args >= 1 ) then (Right $ (Prelude.head args, Prelude.tail args)) else (Left $ InvalidArgs)
 
     -- getArgsSlice :: ccs -> Either Error ByteString
     -- getArgsSlice ccs  = Left notImplemented
