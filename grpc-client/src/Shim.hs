@@ -171,8 +171,8 @@ newChaincodeStub mes recv send
         Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
           -> let maybeSignedProposal = chaincodeMessageProposal mes
              in  case maybeSignedProposal of
-                      --  If the SignedProposal is empty, populate the stub with just the 
-                      -- args, txId, channelId, decorations, send and recv
+                                  --  If the SignedProposal is empty, populate the stub with just the 
+                                  -- args, txId, channelId, decorations, send and recv
                    Nothing -> Right $ DefaultChaincodeStub
                      args
                      (toStrict $ chaincodeMessageTxid mes)
@@ -195,11 +195,11 @@ newChaincodeStub mes recv send
                              args
                              (toStrict $ chaincodeMessageTxid mes)
                              (toStrict $ chaincodeMessageChannelId mes)
-                             Nothing
+                             (getCreator proposal)
                              (Just signedProposal)
                              (Just proposal)
                              (getTransient proposal)
-                             Nothing
+                             (getBinding proposal)
                              (mapKeys toStrict decorations)
                              recv
                              send
@@ -216,7 +216,8 @@ getProposal signedProposal =
 
 -- -- TODO: Figure out where the SignatureHeader is defined
 -- -- and then get creator from the header.
--- getCreator :: Pb.Proposal -> Maybe ByteString
+getCreator :: Pb.Proposal -> Maybe ByteString
+getCreator _ = Nothing
 -- getCreator proposal =
 --   let eErrSignatureHeader =
 --         Suite.fromByteString (proposalHeader proposal)
@@ -233,7 +234,8 @@ getTransient proposal =
           Just (mapKeys toStrict $ chaincodeProposalPayloadTransientMap payload)
 
 -- -- TODO: Need to find ChannelHeader and SignatureHeader
--- getBinding :: Pb.Proposal -> Maybe MapTextBytes
+getBinding :: Pb.Proposal -> Maybe MapTextBytes
+getBinding _ = Nothing
 -- getBinding proposal =
 --   let eErrChannelHeader   = Suite.fromByteString (? proposal)
 --       eErrSignatureHeader = Suite.fromByteString (? proposal)

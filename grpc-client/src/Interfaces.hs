@@ -31,8 +31,8 @@ class ChaincodeStubInterface ccs where
     -- invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
     getState :: ccs -> Text -> IO (Either Error ByteString)
     putState :: ccs -> Text -> ByteString -> IO (Either Error ByteString)
+    delState :: ccs -> Text -> IO (Either Error ByteString)
 
-    -- delState :: ccs -> String -> Maybe Error
     -- setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
     -- getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
     -- getStateByRange :: ccs -> String -> String -> Either Error StateQueryIterator

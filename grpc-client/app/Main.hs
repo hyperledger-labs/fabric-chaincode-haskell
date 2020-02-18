@@ -31,20 +31,20 @@ chaincodeStub = ChaincodeStub { initFn = initFunc, invokeFn = invokeFunc }
 initFunc :: DefaultChaincodeStub -> IO Pb.Response
 initFunc s =
   let initArgs = getArgs s
-  in
-    if Prelude.length initArgs == 3
-      then
-        let response = putState s (decodeUtf8 $ initArgs ! 1) (initArgs ! 2)
-        in
-          do
-            e <- response :: IO (Either Error ByteString)
-            case e of
-              Left err -> trace ("Error putting state" ++ show err)
-                                (pure $ errorPayload "Error putting state")
-              Right _ -> trace "Put state seemed to work!"
-                               (pure $ successPayload Nothing)
-      else trace
-        "Wrong arg number supplied for init"
+    in
+      if Prelude.length initArgs == 3
+        then
+          let response = putState s (decodeUtf8 $ initArgs ! 1) (initArgs ! 2)
+          in
+            do
+              e <- response :: IO (Either Error ByteString)
+              case e of
+                Left err -> trace ("Error putting state" ++ show err)
+                                  (pure $ errorPayload "Error putting state")
+                Right _ -> trace "Put state seemed to work!"
+                                 (pure $ successPayload Nothing)
+        else trace
+          "Wrong arg number supplied for init"
         (pure $ errorPayload
           "Wrong number of arguments supplied for init. Two arguments needed"
         )
@@ -56,6 +56,7 @@ invokeFunc s =
         Left _ -> pure $ errorPayload "Error getting function and parameters"
         Right ("get", parameters) -> fetchState s parameters
         Right ("put", parameters) -> createState s parameters
+        Right ("del", parameters) -> deleteState s parameters
         Right ("getArgSlice", _) -> getArgSlice s
         Right (_, _) -> pure $ errorPayload "No function with that name found"
 
@@ -101,3 +102,19 @@ getArgSlice s =
                           (pure $ errorPayload "Error getting argslice")
         Right bs -> trace ("getArgSlice bytestring: " ++ toString bs)
                           (pure $ successPayload Nothing)
+
+deleteState :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
+deleteState s params = if Prelude.length params == 1
+  then
+    let response = delState s (head params)
+    in  do
+          e <- response :: IO (Either Error ByteString)
+          case e of
+            Left err -> trace ("Error deleting state" ++ show err)
+                              (pure $ errorPayload "Error deleting state")
+            Right _ -> trace "State deleted!" (pure $ successPayload Nothing)
+  else trace
+    "Wrong number of arguments supplied for del. One argument needed"
+    (pure $ errorPayload
+      "Wrong number of arguments supplied for del. One argument needed"
+    )

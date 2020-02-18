@@ -19,7 +19,7 @@ import           Peer.Chaincode                as Pb
 import           Peer.ProposalResponse         as Pb
 
 
-data CCMessageType = GET_STATE | PUT_STATE | REGISTER | COMPLETED
+data CCMessageType = GET_STATE | PUT_STATE | DEL_STATE | REGISTER | COMPLETED
 
 regMessage :: ChaincodeMessage
 regMessage = buildChaincodeMessage REGISTER regPayload "" ""
@@ -55,6 +55,10 @@ putStatePayload key value = Pb.PutState { putStateKey        = fromStrict key
                                         , putStateValue      = value
                                         , putStateCollection = ""
                                         }
+                                        
+delStatePayload :: Text -> Pb.DelState
+delStatePayload key =
+  Pb.DelState {delStateKey = fromStrict key, delStateCollection = ""}
 
 -- buildChaincodeMessage
 --   :: Enumerated Pb.ChaincodeMessage_Type
@@ -66,8 +70,8 @@ buildChaincodeMessage mesType payload txid chanID = ChaincodeMessage
   { chaincodeMessageType           = getCCMessageType mesType
   , chaincodeMessageTimestamp      = Nothing
   , chaincodeMessagePayload        = LBS.toStrict
-                                     $ Wire.toLazyByteString
-                                     $ encodeMessage (FieldNumber 1) payload
+    $ Wire.toLazyByteString
+    $ encodeMessage (FieldNumber 1) payload
   , chaincodeMessageTxid           = fromStrict txid
   , chaincodeMessageProposal       = Nothing
   , chaincodeMessageChaincodeEvent = Nothing
@@ -78,5 +82,6 @@ getCCMessageType :: CCMessageType -> Enumerated Pb.ChaincodeMessage_Type
 getCCMessageType ccMessageType = case ccMessageType of
   GET_STATE -> Enumerated $ Right ChaincodeMessage_TypeGET_STATE
   PUT_STATE -> Enumerated $ Right ChaincodeMessage_TypePUT_STATE
+  DEL_STATE -> Enumerated $ Right ChaincodeMessage_TypeDEL_STATE
   REGISTER  -> Enumerated $ Right ChaincodeMessage_TypeREGISTER
   COMPLETED -> Enumerated $ Right ChaincodeMessage_TypeCOMPLETED
