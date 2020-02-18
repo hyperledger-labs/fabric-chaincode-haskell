@@ -89,9 +89,18 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
             Left  err -> error ("Error while streaming: " ++ show err)
             Right _   -> pure ()
           listenForResponse (recvStream ccs)
-    --
-    -- -- delState :: ccs -> String -> Maybe Error
-    -- delState ccs key = Right notImplemented
+
+  -- delState :: ccs -> Text -> IO (Maybe Error)
+  delState ccs key =
+      let payload = delStatePayload key
+          message = buildChaincodeMessage DEL_STATE payload (txId ccs) (channelId ccs)
+      in do
+        e <- (sendStream ccs) message
+        case e of
+          Left err -> error ("Error while streaming: " ++ show err)
+          Right _ -> pure ()
+        listenForResponse (recvStream ccs)
+
     --
     -- -- setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
     -- setStateValidationParameter ccs key parameters = Right notImplemented

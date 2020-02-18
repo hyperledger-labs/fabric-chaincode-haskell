@@ -1,10 +1,11 @@
 # haskell-cc
 
-NOTE: This project is currently a PRE-ALPHA and is NOT suitable for production use. 
+NOTE: This project is currently a PRE-ALPHA and is NOT suitable for production use.
 
 Haskell-cc is a Haskell shim for Hyperledger Fabric to allow the authoring of smart contracts in Haskell.
 
 The project has three main parts:
+
 - `protos` and `google-protos/google/protobuf` - The source protobuf files that define the communication between the shim and the peer. The corresponding Haskell files are generated in `/grpc-client/src` (see `generate script` section below)
 - `grpc-client/src` - Contains the Shim
 - `grpc-client/app` - Contains the main executable which is an example usage of the shim
@@ -71,6 +72,7 @@ The chaincode can then be invoked with the following examples:
 peer chaincode invoke -n mycc -c '{"Args":["get","a"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["put","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["getArgSlice"," this ","should ", "be ", "printed "]}' -C my
+peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 ```
 
 ## Generate script
