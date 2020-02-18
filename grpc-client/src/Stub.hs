@@ -23,36 +23,8 @@ import           Proto3.Suite
 
 import           Interfaces
 import           Messages
-import           Error
+import           Types
 
--- Algebraic Type represeting the DefaultChaincodeStub.  This is the
--- one used to enable the chaincode to interact with ledger and chaincode
--- execution services of the peer. A istance of this type is created for
--- each of the chaincode invocations that are performed.
--- TODO: remove all these maybes when the stub is being created properly
-data DefaultChaincodeStub = DefaultChaincodeStub {
-    -- chaincode invocation arguments. serialised as arrays of bytes.
-    args :: Vector ByteString,
-    -- -- name of the function being invoked.
-    -- function :: Maybe Text,
-    -- -- arguments of the function idenfied by the chaincode invocation.
-    -- parameters :: Maybe [String],
-    -- transaction identifier.
-    txId :: Text,
-    -- channel identifier
-    channelId:: Text,
-    -- timestamp of the transaction invocation
-    txTimestamp :: Maybe Pb.Timestamp,
-    -- bytes of the X.509 identity of the originator of the transaction.
-    creator :: Maybe ByteString,
-    -- information about the signed proposalgit
-    signedProposal :: Maybe Pb.SignedProposal,
-    transient :: Maybe MapStringBytes,
-    binding :: Maybe MapStringBytes,
-    decorations :: Maybe MapStringBytes,
-    recvStream :: StreamRecv ChaincodeMessage,
-    sendStream :: StreamSend ChaincodeMessage
-}
 
 -- NOTE: When support for concurrency transaction is added, this function will no longer be required
 -- as the stub function will block and listen for responses over a channel when the code is concurrent
@@ -68,55 +40,55 @@ listenForResponse recv = do
     Right (Just _) -> listenForResponse recv
     Right Nothing  -> pure $ Left $ Error "I got no message... wtf"
 
-instance ChaincodeStubI DefaultChaincodeStub where
+instance ChaincodeStubInterface DefaultChaincodeStub where
     -- getArgs :: ccs -> Vector ByteString
-    getArgs ccs = args ccs
+  getArgs ccs = args ccs
 
-    -- getStringArgs :: ccs -> [Text]
-    getStringArgs ccs = let args = getArgs ccs
-      in
-        toList $ decodeUtf8 <$> args
+  -- getStringArgs :: ccs -> [Text]
+  getStringArgs ccs = let args = getArgs ccs in toList $ decodeUtf8 <$> args
 
-    -- getFunctionAndParameters :: ccs -> Either Error (Text, [Text])
-    getFunctionAndParameters ccs = let args = getStringArgs ccs
-      in
-        if not (Prelude.null args) then Right (Prelude.head args, Prelude.tail args) else Left InvalidArgs
+  -- getFunctionAndParameters :: ccs -> Either Error (Text, [Text])
+  getFunctionAndParameters ccs =
+    let args = getStringArgs ccs
+    in  if not (Prelude.null args)
+          then Right (Prelude.head args, Prelude.tail args)
+          else Left InvalidArgs
 
-    -- getArgsSlice :: ccs -> Either Error ByteString
-    getArgsSlice ccs = Right $ Vector.foldr BS.append BS.empty $ getArgs ccs
+  -- getArgsSlice :: ccs -> Either Error ByteString
+  getArgsSlice ccs = Right $ Vector.foldr BS.append BS.empty $ getArgs ccs
 
-    -- getTxId :: css -> String
-    getTxId css = txId css
+  -- getTxId :: css -> String
+  getTxId css = txId css
 
-    -- getChannelId :: ccs -> String
-    getChannelId ccs = channelId ccs
+  -- getChannelId :: ccs -> String
+  getChannelId ccs = channelId ccs
 
-    -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
-    -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
-    --
-    -- getState :: ccs -> Text -> IO (Either Error ByteString)
-    getState ccs key = let
-        payload = getStatePayload key
-        message = buildChaincodeMessage GET_STATE payload (txId ccs) (channelId ccs)
-        in
-        do
-        e <- (sendStream ccs) message
-        case e of
-            Left err -> error ("Error while streaming: " ++ show err)
-            Right _ -> pure ()
-        listenForResponse (recvStream ccs)
+  -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
+  -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
+  --
+  -- getState :: ccs -> Text -> IO (Either Error ByteString)
+  getState ccs key =
+    let payload = getStatePayload key
+        message =
+            buildChaincodeMessage GET_STATE payload (txId ccs) (channelId ccs)
+    in  do
+          e <- (sendStream ccs) message
+          case e of
+            Left  err -> error ("Error while streaming: " ++ show err)
+            Right _   -> pure ()
+          listenForResponse (recvStream ccs)
 
-    -- -- putState :: ccs -> Text -> ByteString -> Maybe Error
-    putState ccs key value = let
-        payload = putStatePayload key value
-        message = buildChaincodeMessage PUT_STATE payload (txId ccs) (channelId ccs)
-        in
-        do
-        e <- (sendStream ccs) message
-        case e of
-            Left err -> error ("Error while streaming: " ++ show err)
-            Right _ -> pure ()
-        listenForResponse (recvStream ccs)
+  -- -- putState :: ccs -> Text -> ByteString -> Maybe Error
+  putState ccs key value =
+    let payload = putStatePayload key value
+        message =
+            buildChaincodeMessage PUT_STATE payload (txId ccs) (channelId ccs)
+    in  do
+          e <- (sendStream ccs) message
+          case e of
+            Left  err -> error ("Error while streaming: " ++ show err)
+            Right _   -> pure ()
+          listenForResponse (recvStream ccs)
     --
     -- -- delState :: ccs -> String -> Maybe Error
     -- delState ccs key = Right notImplemented

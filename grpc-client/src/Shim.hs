@@ -2,7 +2,16 @@
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE OverloadedLists   #-}
 
-module Shim where
+module Shim
+  ( start
+  , DefaultChaincodeStub(..)
+  , ChaincodeStub(..)
+  , Error(..)
+  , errorPayload
+  , successPayload
+  , ChaincodeStubInterface(..)
+  )
+where
 
 import qualified Data.ByteString.Lazy          as LBS
 import           Data.ByteString.Char8         as BC
@@ -23,24 +32,22 @@ import           Peer.Chaincode                as Pb
 import           Peer.ProposalResponse         as Pb
 
 import           Stub
-import           Interfaces
+import           Interfaces                     ( ChaincodeStubInterface(..) )
 import           Messages
+import           Types                          ( DefaultChaincodeStub(..)
+                                                , Error(..)
+                                                , ChaincodeStub(..)
+                                                )
 
 import           Debug.Trace
 
 clientConfig :: ClientConfig
-clientConfig = ClientConfig
-  { clientServerHost = "localhost"
-  , clientServerPort = 7052
-  , clientArgs       = []
-  , clientSSLConfig  = Nothing
-  , clientAuthority  = Nothing
-  }
-
-data ChaincodeStub = ChaincodeStub {
-    initFn :: DefaultChaincodeStub -> IO Pb.Response,
-    invokeFn :: DefaultChaincodeStub -> IO Pb.Response
-}
+clientConfig = ClientConfig { clientServerHost = "localhost"
+                            , clientServerPort = 7052
+                            , clientArgs       = []
+                            , clientSSLConfig  = Nothing
+                            , clientAuthority  = Nothing
+                            }
 
 -- TODO: start :: ChaincodeStub a => (a -> Pb.Response) -> IO ()
 start :: ChaincodeStub -> IO ()
@@ -102,13 +109,12 @@ handleInit
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInit mes recv send initFn
-  = let eErrInput =
+handleInit mes recv send initFn =
+  let eErrInput =
           Suite.fromByteString (chaincodeMessagePayload mes) :: Either
               ParseError
               Pb.ChaincodeInput
-    in
-      case eErrInput of
+  in  case eErrInput of
         Left  err -> error (show err)
         Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
           let stub = DefaultChaincodeStub
@@ -142,13 +148,12 @@ handleInvoke
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInvoke mes recv send invokeFn
-  = let eErrInput =
+handleInvoke mes recv send invokeFn =
+  let eErrInput =
           Suite.fromByteString (chaincodeMessagePayload mes) :: Either
               ParseError
               Pb.ChaincodeInput
-    in
-      case eErrInput of
+  in  case eErrInput of
         Left  err -> error (show err)
         Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
           let stub = DefaultChaincodeStub
