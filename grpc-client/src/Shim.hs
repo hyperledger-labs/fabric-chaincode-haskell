@@ -20,6 +20,8 @@ import           Data.Text.Encoding            as TSE
 import           Data.Text
 import           Data.Text.Lazy                 ( toStrict )
 
+-- import           Crypto.Hash.SHA256
+
 import           Network.GRPC.HighLevel.Generated
 import           Network.GRPC.HighLevel
 import qualified Network.GRPC.LowLevel.Client  as Client
@@ -30,6 +32,7 @@ import           Proto3.Wire
 
 import           Peer.ChaincodeShim            as Pb
 import           Peer.Chaincode                as Pb
+import           Peer.Proposal                 as Pb
 import           Peer.ProposalResponse         as Pb
 
 import           Stub
@@ -38,6 +41,7 @@ import           Messages
 import           Types                          ( DefaultChaincodeStub(..)
                                                 , Error(..)
                                                 , ChaincodeStub(..)
+                                                , MapTextBytes
                                                 )
 
 import           Debug.Trace
@@ -154,31 +158,89 @@ handleInvoke mes recv send invokeFn
             Left  err -> error ("Error while streaming: " ++ show err)
             Right _   -> trace "okie dokey invoke transaction" pure ()
 
--- TODO: extract proposal from signedProposal
--- then extract creator, transient and binding from proposal
 newChaincodeStub
   :: ChaincodeMessage
   -> StreamRecv ChaincodeMessage
   -> StreamSend ChaincodeMessage
   -> Either Error DefaultChaincodeStub
 newChaincodeStub mes recv send
-  = let eErrInput =
-          Suite.fromByteString (chaincodeMessagePayload mes) :: Either
-              ParseError
-              Pb.ChaincodeInput
+  = let eErrInput = getChaincodeInput mes
     in
       case eErrInput of
         Left err -> Left $ error (show err)
         Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
-          -> let signedProposal = chaincodeMessageProposal mes
-             in  Right $ DefaultChaincodeStub
-                   args
-                   (toStrict $ chaincodeMessageTxid mes)
-                   (toStrict $ chaincodeMessageChannelId mes)
-                   Nothing
-                   signedProposal
-                   Nothing
-                   Nothing
-                   (mapKeys toStrict decorations)
-                   recv
-                   send
+          -> let maybeSignedProposal = chaincodeMessageProposal mes
+             in  case maybeSignedProposal of
+                      --  If the SignedProposal is empty, populate the stub with just the 
+                      -- args, txId, channelId, decorations, send and recv
+                   Nothing -> Right $ DefaultChaincodeStub
+                     args
+                     (toStrict $ chaincodeMessageTxid mes)
+                     (toStrict $ chaincodeMessageChannelId mes)
+                     Nothing
+                     Nothing
+                     Nothing
+                     Nothing
+                     Nothing
+                     (mapKeys toStrict decorations)
+                     recv
+                     send
+                    --  If SignedProposal is not empty, get the proposal from it
+                    -- and the creator, transient and binding from the proposal
+                   Just signedProposal ->
+                     let eErrProposal = getProposal signedProposal
+                     in  case eErrProposal of
+                           Left  err      -> Left $ error (show err)
+                           Right proposal -> Right $ DefaultChaincodeStub
+                             args
+                             (toStrict $ chaincodeMessageTxid mes)
+                             (toStrict $ chaincodeMessageChannelId mes)
+                             Nothing
+                             (Just signedProposal)
+                             (Just proposal)
+                             (getTransient proposal)
+                             Nothing
+                             (mapKeys toStrict decorations)
+                             recv
+                             send
+
+
+-- These are some helper functions to process the unmarshalling of different types
+-- from the chaincode message in order to populate the stub
+getChaincodeInput :: ChaincodeMessage -> Either ParseError Pb.ChaincodeInput
+getChaincodeInput mes = Suite.fromByteString (chaincodeMessagePayload mes)
+
+getProposal :: Pb.SignedProposal -> Either ParseError Pb.Proposal
+getProposal signedProposal =
+  Suite.fromByteString (signedProposalProposalBytes signedProposal)
+
+-- -- TODO: Figure out where the SignatureHeader is defined
+-- -- and then get creator from the header.
+-- getCreator :: Pb.Proposal -> Maybe ByteString
+-- getCreator proposal =
+--   let eErrSignatureHeader =
+--         Suite.fromByteString (proposalHeader proposal)
+--   in  case eErrSignatureHeader of
+--         Left  _      -> Nothing
+--         Right header -> Just $ getCreator header
+
+getTransient :: Pb.Proposal -> Maybe MapTextBytes
+getTransient proposal =
+  let eErrPayload = Suite.fromByteString (proposalPayload proposal)
+  in  case eErrPayload of
+        Left _ -> Nothing
+        Right payload ->
+          Just (mapKeys toStrict $ chaincodeProposalPayloadTransientMap payload)
+
+-- -- TODO: Need to find ChannelHeader and SignatureHeader
+-- getBinding :: Pb.Proposal -> Maybe MapTextBytes
+-- getBinding proposal =
+--   let eErrChannelHeader   = Suite.fromByteString (? proposal)
+--       eErrSignatureHeader = Suite.fromByteString (? proposal)
+--       maybeCreator        = getCreator proposal
+--   in  case (eErrChannelHeader, eErrSignatureHeader, maybeCreator) of
+--         (Left _, _     , _      ) -> Nothing
+--         (_     , Left _, _      ) -> Nothing
+--         (_     , _     , Nothing) -> Nothing
+--         (Right chdr, Right shdr, Just creator) ->
+--           Just $ hash ((getNonce shdr) ++ creator ++ (getEpoch chdr))
