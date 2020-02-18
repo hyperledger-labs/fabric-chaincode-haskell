@@ -78,3 +78,12 @@ Note: Due to [an issue](https://github.com/awakesecurity/proto3-suite/issues/119
 The `generate.sh` script is used to generate the Haskell source files from the `.proto` files.
 
 The script requires the `compile-proto-file` binary, which can be installed from here https://github.com/awakesecurity/proto3-suite
+
+## TODO
+
+[ ] Write unit tests for stub functions
+[ ] Add support for concurrent transactions
+[ ] Finish implementing shim functions and clean up shim module exports
+[ ] Finish implementing all stub functions
+[ ] Add examples directory
+[ ] Publish to Hackage

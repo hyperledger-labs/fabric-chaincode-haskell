@@ -15,29 +15,11 @@ import qualified Peer.Chaincode                as Pb
 
 import           Error
 
--- Error data simply contains a string that specifies the error that has occurred.
--- data Error = Error { message :: String } deriving Show
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
---
 type MapStringBytes = Map String ByteString
 
-
-
--- The Chaincode type classs defines the constraints on the behaviour of types that
--- implement its methods. The fabric shim will un the transactions by calling these
--- functions on an instance type of this type class.
--- class Chaincode cc where
---     -- Init is called during the invocation of the Instantiate transaction after
---     -- the chaincode container has established for the first time, allowing the
---     -- chaincode to initialise itself.
---     init ::  cc -> ChaincodeStub -> Pb.Response
---     -- Invoke is called to update or query the ledger in a proposal transaction.
---     -- Updatd state variables are not committed to the ledger until the transaction
---     -- is committed.
---     invoke  :: cc -> ChaincodeStub -> Pb.Response
-
--- The ChaincodeStuv type class defines the behaviour of the stub that is exposed to
+-- The ChaincodeStub type class defines the behaviour of the stub that is exposed to
 -- the the Chaincode types to interact with the ledger.
 class ChaincodeStubI ccs where
     getArgs :: ccs -> Vector ByteString

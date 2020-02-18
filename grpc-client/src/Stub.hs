@@ -54,11 +54,8 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     sendStream :: StreamSend ChaincodeMessage
 }
 
--- Default error value used for functions that are not implemented
--- yet. This is used to save creation of Error values that are
--- effectively all the same.
-notImplemented = error "Function not implemented"
-
+-- NOTE: When support for concurrency transaction is added, this function will no longer be required
+-- as the stub function will block and listen for responses over a channel when the code is concurrent
 listenForResponse :: StreamRecv ChaincodeMessage -> IO (Either Error ByteString)
 listenForResponse recv = do
   res <- recv
@@ -83,7 +80,7 @@ instance ChaincodeStubI DefaultChaincodeStub where
     -- getFunctionAndParameters :: ccs -> Either Error (Text, [Text])
     getFunctionAndParameters ccs = let args = getStringArgs ccs
       in
-        if (Prelude.length args >= 1 ) then (Right $ (Prelude.head args, Prelude.tail args)) else (Left $ InvalidArgs)
+        if not (Prelude.null args) then Right (Prelude.head args, Prelude.tail args) else Left InvalidArgs
 
     -- getArgsSlice :: ccs -> Either Error ByteString
     getArgsSlice ccs = Right $ Vector.foldr BS.append BS.empty $ getArgs ccs
@@ -100,10 +97,10 @@ instance ChaincodeStubI DefaultChaincodeStub where
     -- getState :: ccs -> Text -> IO (Either Error ByteString)
     getState ccs key = let
         payload = getStatePayload key
-        message = buildChaincodeMessage (GET_STATE) payload (txId ccs) (channelId ccs)
+        message = buildChaincodeMessage GET_STATE payload (txId ccs) (channelId ccs)
         in
         do
-        e <- ((sendStream ccs) message)
+        e <- (sendStream ccs) message
         case e of
             Left err -> error ("Error while streaming: " ++ show err)
             Right _ -> pure ()
@@ -115,7 +112,7 @@ instance ChaincodeStubI DefaultChaincodeStub where
         message = buildChaincodeMessage PUT_STATE payload (txId ccs) (channelId ccs)
         in
         do
-        e <- ((sendStream ccs) message)
+        e <- (sendStream ccs) message
         case e of
             Left err -> error ("Error while streaming: " ++ show err)
             Right _ -> pure ()
