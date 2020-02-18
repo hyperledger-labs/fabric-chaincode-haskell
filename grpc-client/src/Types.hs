@@ -44,10 +44,11 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     -- txTimestamp :: Maybe Pb.Timestamp,
     -- bytes of the X.509 identity of the originator of the transaction.
     creator :: Maybe ByteString,
-    -- information about the signed proposalgit
+    -- information about the signed proposal
     signedProposal :: Maybe Pb.SignedProposal,
-    transient :: Maybe MapStringBytes,
-    binding :: Maybe MapStringBytes,
+    proposal :: Maybe Pb.Proposal,
+    transient :: Maybe MapTextBytes,
+    binding :: Maybe MapTextBytes,
     decorations :: MapTextBytes,
     recvStream :: StreamRecv ChaincodeMessage,
     sendStream :: StreamSend ChaincodeMessage
