@@ -1,18 +1,21 @@
 # haskell-cc
 
-To generate the haskell files from the proto files, run the `generate.sh` script.
+Haskell-cc is a Haskell shim for Hyperledger Fabric to allow the authoring of smart contracts in Haskell.
 
-Note that the script requires the `compile-proto-file` binary. Install the binary from here https://github.com/awakesecurity/proto3-suite
+The project has three main parts:
+- `protos` and `google-protos/google/protobuf` - The source protobuf files that define the communication between the shim and the peer. The corresponding Haskell files are generated in `/grpc-client/src` (see `generate script` section below)
+- `grpc-client/src` - Contains the Shim
+- `grpc-client/app` - Contains the main executable which is an example usage of the shim
 
-Note: The generated haskell files with the latest version of the `compile-proto-file` binary generates code that doesn't type check. To fix it, convert all `HsJSONPB.SwaggerObject` to `Hs.Just HsJSONPB.SwaggerObject`.
+## Installation
 
-To build the project use:
+To build the project, run the following from the `grpc-client` directory:
 
 ```
 stack build
 ```
 
-It is possible that you might get an error with `grpc-haskell-core`, like the following:
+Note : It is possible that you might get a build error with `grpc-haskell-core`, like the following:
 
 ```
 Missing dependencies on foreign libraries:
@@ -21,7 +24,11 @@ Missing dependencies on foreign libraries:
 ```
 
 This is because the underlying C binaries are either not installed or are not installed correctly.
-To fix this, try reinstalling the grpc binary with `brew install grpc`.
+To fix this, try reinstalling the grpc binary with `brew install grpc`/`brew reinstall grpc`.
+
+## Usage
+
+Note: Since running chaincode in production mode depends on a language specific flag (e.g. `-l golang`, `-l java` or `-l node`), it is currently only possible to run Haskell chaincode in dev mode. Supporting Haskell chaincode in production mode will require some minor changes to be made to the peer source code.
 
 ### Running the Haskell chaincode
 
@@ -53,7 +60,7 @@ In the second tab, run the following:
 docker exec -it cli bash
 peer chaincode install -n mycc -v v0 -l golang -p chaincodedev/chaincode/chaincode_example02/go
 peer chaincode list --installed
-peer chaincode instantiate -n mycc -v v0 -l golang -c '{"Args":["init","a","100"]}' -C myc -o orderer:705
+peer chaincode instantiate -n mycc -v v0 -l golang -c '{"Args":["init","a","100"]}' -C myc -o orderer:7050
 ```
 
 The chaincode can then be invoked with the following examples:
@@ -63,3 +70,11 @@ peer chaincode invoke -n mycc -c '{"Args":["get","a"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["put","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["getArgSlice"," this ","should ", "be ", "printed "]}' -C my
 ```
+
+## Generate script
+
+Note: Due to [an issue](https://github.com/awakesecurity/proto3-suite/issues/119) with the latest `compile-proto-file` binary, it generates code that doesn't type check. Until this issue is resolved, you need to manually convert all `HsJSONPB.SwaggerObject` to `Hs.Just HsJSONPB.SwaggerObject` within the generated files.
+
+The `generate.sh` script is used to generate the Haskell source files from the `.proto` files.
+
+The script requires the `compile-proto-file` binary, which can be installed from here https://github.com/awakesecurity/proto3-suite
