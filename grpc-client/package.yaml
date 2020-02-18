@@ -1,10 +1,10 @@
 name:                grpc-client
 version:             0.1.0.0
 github:              "githubuser/grpc-client"
-license:             BSD3
-author:              "Author name here"
+license:             Apache-2
+author:              "Nick Waywood, Allison Irvin"
 maintainer:          "example@example.com"
-copyright:           "2020 Author name here"
+copyright:           "2020 Nick Waywood"
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
