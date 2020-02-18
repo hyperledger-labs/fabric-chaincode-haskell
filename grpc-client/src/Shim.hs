@@ -15,6 +15,7 @@ where
 
 import qualified Data.ByteString.Lazy          as LBS
 import           Data.ByteString.Char8         as BC
+import           Data.Map                       ( mapKeys )
 import           Data.Text.Encoding            as TSE
 import           Data.Text
 import           Data.Text.Lazy                 ( toStrict )
@@ -42,12 +43,13 @@ import           Types                          ( DefaultChaincodeStub(..)
 import           Debug.Trace
 
 clientConfig :: ClientConfig
-clientConfig = ClientConfig { clientServerHost = "localhost"
-                            , clientServerPort = 7052
-                            , clientArgs       = []
-                            , clientSSLConfig  = Nothing
-                            , clientAuthority  = Nothing
-                            }
+clientConfig = ClientConfig
+  { clientServerHost = "localhost"
+  , clientServerPort = 7052
+  , clientArgs       = []
+  , clientSSLConfig  = Nothing
+  , clientAuthority  = Nothing
+  }
 
 -- TODO: start :: ChaincodeStub a => (a -> Pb.Response) -> IO ()
 start :: ChaincodeStub -> IO ()
@@ -109,26 +111,12 @@ handleInit
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInit mes recv send initFn =
-  let eErrInput =
-          Suite.fromByteString (chaincodeMessagePayload mes) :: Either
-              ParseError
-              Pb.ChaincodeInput
-  in  case eErrInput of
-        Left  err -> error (show err)
-        Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
-          let stub = DefaultChaincodeStub
-                args
-                (toStrict $ chaincodeMessageTxid mes)
-                (toStrict $ chaincodeMessageChannelId mes)
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                recv
-                send
+handleInit mes recv send initFn
+  = let eStub = newChaincodeStub mes recv send
+    in
+      case eStub of
+        Left  err  -> error ("Error while creating stub: " ++ show err)
+        Right stub -> do
           response <- initFn stub
           e        <-
             send
@@ -148,26 +136,12 @@ handleInvoke
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInvoke mes recv send invokeFn =
-  let eErrInput =
-          Suite.fromByteString (chaincodeMessagePayload mes) :: Either
-              ParseError
-              Pb.ChaincodeInput
-  in  case eErrInput of
-        Left  err -> error (show err)
-        Right Pb.ChaincodeInput { chaincodeInputArgs = args } -> do
-          let stub = DefaultChaincodeStub
-                args
-                (toStrict $ chaincodeMessageTxid mes)
-                (toStrict $ chaincodeMessageChannelId mes)
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                Nothing
-                recv
-                send
+handleInvoke mes recv send invokeFn
+  = let eStub = newChaincodeStub mes recv send
+    in
+      case eStub of
+        Left  err  -> error ("Error while creating stub: " ++ show err)
+        Right stub -> do
           response <- invokeFn stub
           e        <-
             send
@@ -179,3 +153,32 @@ handleInvoke mes recv send invokeFn =
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
             Right _   -> trace "okie dokey invoke transaction" pure ()
+
+-- TODO: extract proposal from signedProposal
+-- then extract creator, transient and binding from proposal
+newChaincodeStub
+  :: ChaincodeMessage
+  -> StreamRecv ChaincodeMessage
+  -> StreamSend ChaincodeMessage
+  -> Either Error DefaultChaincodeStub
+newChaincodeStub mes recv send
+  = let eErrInput =
+          Suite.fromByteString (chaincodeMessagePayload mes) :: Either
+              ParseError
+              Pb.ChaincodeInput
+    in
+      case eErrInput of
+        Left err -> Left $ error (show err)
+        Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
+          -> let signedProposal = chaincodeMessageProposal mes
+             in  Right $ DefaultChaincodeStub
+                   args
+                   (toStrict $ chaincodeMessageTxid mes)
+                   (toStrict $ chaincodeMessageChannelId mes)
+                   Nothing
+                   signedProposal
+                   Nothing
+                   Nothing
+                   (mapKeys toStrict decorations)
+                   recv
+                   send
