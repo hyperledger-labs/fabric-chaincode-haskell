@@ -1,6 +1,8 @@
-module Interfaces where
+module Interfaces
+  ( ChaincodeStubInterface(..)
+  )
+where
 
-import           Data.Map
 import           Data.ByteString
 import           Data.Text
 import           Data.Vector
@@ -13,15 +15,13 @@ import qualified Peer.ProposalResponse         as Pb
 import qualified Peer.Chaincode                as Pb
 
 
-import           Error
+import           Types
 
 
--- MapStringBytes is a synonym for the Map type whose keys are String and values
-type MapStringBytes = Map String ByteString
 
 -- The ChaincodeStub type class defines the behaviour of the stub that is exposed to
 -- the the Chaincode types to interact with the ledger.
-class ChaincodeStubI ccs where
+class ChaincodeStubInterface ccs where
     getArgs :: ccs -> Vector ByteString
     getStringArgs :: ccs -> [Text]
     getFunctionAndParameters :: ccs -> Either Error (Text, [Text])

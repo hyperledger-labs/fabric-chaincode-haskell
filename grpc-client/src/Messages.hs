@@ -19,37 +19,42 @@ import           Peer.Chaincode                as Pb
 import           Peer.ProposalResponse         as Pb
 
 
+data CCMessageType = GET_STATE | PUT_STATE | REGISTER | COMPLETED
+
+regMessage :: ChaincodeMessage
+regMessage = buildChaincodeMessage REGISTER regPayload "" ""
+
 regPayload :: Pb.ChaincodeID
-regPayload = Pb.ChaincodeID
-  { chaincodeIDName    = "mycc:v0"
-  , chaincodeIDPath    = "chaincodedev/chaincode/chaincode_example02/go"
-  , chaincodeIDVersion = "v0"
-  }
+regPayload = Pb.ChaincodeID { chaincodeIDName    = "mycc:v0" -- Go shim only sends this
+                            , chaincodeIDPath    = ""
+                            , chaincodeIDVersion = ""
+                            }
 
-successPayload :: Pb.Response
-successPayload = Pb.Response
-  { responseStatus  = 200
-  , responseMessage = "Successfully initialised"
-  , responsePayload = TSE.encodeUtf8 "40"
-  }
+successPayload :: Maybe ByteString -> Pb.Response
+successPayload Nothing = Pb.Response { responseStatus  = 200
+                                     , responseMessage = ""
+                                     , responsePayload = TSE.encodeUtf8 ""
+                                     }
+successPayload (Just payload) = Pb.Response { responseStatus  = 200
+                                            , responseMessage = ""
+                                            , responsePayload = payload
+                                            }
 
-failPayload :: Text -> Pb.Response
-failPayload msg = Pb.Response
-  { responseStatus  = 500
-  , responseMessage = fromStrict msg
-  , responsePayload = TSE.encodeUtf8 "41"
-  }
+errorPayload :: Text -> Pb.Response
+errorPayload message = Pb.Response { responseStatus  = 400
+                                   , responseMessage = fromStrict message
+                                   , responsePayload = TSE.encodeUtf8 ""
+                                   }
 
 getStatePayload :: Text -> Pb.GetState
 getStatePayload key =
-  Pb.GetState {getStateKey = fromStrict key, getStateCollection = ""}
+  Pb.GetState { getStateKey = fromStrict key, getStateCollection = "" }
 
 putStatePayload :: Text -> BS.ByteString -> Pb.PutState
-putStatePayload key value = Pb.PutState
-  { putStateKey        = fromStrict key
-  , putStateValue      = value
-  , putStateCollection = ""
-  }
+putStatePayload key value = Pb.PutState { putStateKey        = fromStrict key
+                                        , putStateValue      = value
+                                        , putStateCollection = ""
+                                        }
 
 -- buildChaincodeMessage
 --   :: Enumerated Pb.ChaincodeMessage_Type
@@ -61,18 +66,13 @@ buildChaincodeMessage mesType payload txid chanID = ChaincodeMessage
   { chaincodeMessageType           = getCCMessageType mesType
   , chaincodeMessageTimestamp      = Nothing
   , chaincodeMessagePayload        = LBS.toStrict
-    $ Wire.toLazyByteString
-    $ encodeMessage (FieldNumber 1) payload
+                                     $ Wire.toLazyByteString
+                                     $ encodeMessage (FieldNumber 1) payload
   , chaincodeMessageTxid           = fromStrict txid
   , chaincodeMessageProposal       = Nothing
   , chaincodeMessageChaincodeEvent = Nothing
   , chaincodeMessageChannelId      = fromStrict chanID
   }
-
-regMessage :: ChaincodeMessage
-regMessage = buildChaincodeMessage REGISTER regPayload "mytxid" "myc"
-
-data CCMessageType = GET_STATE | PUT_STATE | REGISTER | COMPLETED
 
 getCCMessageType :: CCMessageType -> Enumerated Pb.ChaincodeMessage_Type
 getCCMessageType ccMessageType = case ccMessageType of
