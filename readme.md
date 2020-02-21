@@ -85,9 +85,9 @@ The script requires the `compile-proto-file` binary, which can be installed from
 
 ## TODO
 
+- [ x ] Finish implementing shim functions and clean up shim module exports
 - [ ] Write unit tests for stub functions
 - [ ] Add support for concurrent transactions
-- [ ] Finish implementing shim functions and clean up shim module exports
 - [ ] Finish implementing all stub functions
 - [ ] Add examples directory
 - [ ] Publish to Hackage
