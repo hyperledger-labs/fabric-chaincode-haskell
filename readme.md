@@ -73,6 +73,7 @@ The chaincode can then be invoked with the following examples:
 ```
 peer chaincode invoke -n mycc -c '{"Args":["get","a"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["put","b","60"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["set","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 ```
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Sacc where
+module Main where
 
 import           Shim                           ( start
                                                 , successPayload
@@ -16,6 +16,7 @@ import           Peer.ProposalResponse         as Pb
 import           Data.Text                      ( Text )
 import           Data.Text.Encoding             ( encodeUtf8 )
 import           Data.ByteString.UTF8          as BSU
+import           Debug.Trace
 
 main :: IO ()
 main = Shim.start chaincodeStub
@@ -68,5 +69,5 @@ get s params = if (Prelude.length params == 1)
           e <- response
           case e of
             Left  _ -> pure $ errorPayload "Failed to get asset"
-            Right _ -> pure $ successPayload Nothing
+            Right a -> trace (BSU.toString a) (pure $ successPayload Nothing)
   else (pure $ errorPayload "Incorrect arguments. Expecting a key")
