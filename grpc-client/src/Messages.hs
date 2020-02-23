@@ -19,43 +19,48 @@ import           Peer.Chaincode                as Pb
 import           Peer.ProposalResponse         as Pb
 
 
-data CCMessageType = GET_STATE | PUT_STATE | DEL_STATE | REGISTER | COMPLETED
+data CCMessageType = GET_STATE | PUT_STATE | DEL_STATE | REGISTER | COMPLETED | GET_STATE_BY_RANGE
 
 regMessage :: ChaincodeMessage
 regMessage = buildChaincodeMessage REGISTER regPayload "" ""
 
 regPayload :: Pb.ChaincodeID
-regPayload = Pb.ChaincodeID { chaincodeIDName    = "mycc:v0" -- Go shim only sends this
-                            , chaincodeIDPath    = ""
-                            , chaincodeIDVersion = ""
-                            }
+regPayload = Pb.ChaincodeID
+  { chaincodeIDName    = "mycc:v0" -- Go shim only sends this
+  , chaincodeIDPath    = ""
+  , chaincodeIDVersion = ""
+  }
 
 successPayload :: Maybe ByteString -> Pb.Response
-successPayload Nothing = Pb.Response { responseStatus  = 200
-                                     , responseMessage = ""
-                                     , responsePayload = TSE.encodeUtf8 ""
-                                     }
-successPayload (Just payload) = Pb.Response { responseStatus  = 200
-                                            , responseMessage = ""
-                                            , responsePayload = payload
-                                            }
+successPayload Nothing = Pb.Response
+  { responseStatus  = 200
+  , responseMessage = ""
+  , responsePayload = TSE.encodeUtf8 ""
+  }
+successPayload (Just payload) = Pb.Response
+  { responseStatus  = 200
+  , responseMessage = ""
+  , responsePayload = payload
+  }
 
 errorPayload :: Text -> Pb.Response
-errorPayload message = Pb.Response { responseStatus  = 400
-                                   , responseMessage = fromStrict message
-                                   , responsePayload = TSE.encodeUtf8 ""
-                                   }
+errorPayload message = Pb.Response
+  { responseStatus  = 400
+  , responseMessage = fromStrict message
+  , responsePayload = TSE.encodeUtf8 ""
+  }
 
 getStatePayload :: Text -> Pb.GetState
 getStatePayload key =
-  Pb.GetState { getStateKey = fromStrict key, getStateCollection = "" }
+  Pb.GetState {getStateKey = fromStrict key, getStateCollection = ""}
 
 putStatePayload :: Text -> BS.ByteString -> Pb.PutState
-putStatePayload key value = Pb.PutState { putStateKey        = fromStrict key
-                                        , putStateValue      = value
-                                        , putStateCollection = ""
-                                        }
-                                        
+putStatePayload key value = Pb.PutState
+  { putStateKey        = fromStrict key
+  , putStateValue      = value
+  , putStateCollection = ""
+  }
+
 delStatePayload :: Text -> Pb.DelState
 delStatePayload key =
   Pb.DelState {delStateKey = fromStrict key, delStateCollection = ""}
@@ -85,3 +90,5 @@ getCCMessageType ccMessageType = case ccMessageType of
   DEL_STATE -> Enumerated $ Right ChaincodeMessage_TypeDEL_STATE
   REGISTER  -> Enumerated $ Right ChaincodeMessage_TypeREGISTER
   COMPLETED -> Enumerated $ Right ChaincodeMessage_TypeCOMPLETED
+  GET_STATE_BY_RANGE ->
+    Enumerated $ Right ChaincodeMessage_TypeGET_STATE_BY_RANGE

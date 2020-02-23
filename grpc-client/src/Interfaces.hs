@@ -1,5 +1,6 @@
 module Interfaces
   ( ChaincodeStubInterface(..)
+  , StateQueryIterator(..)
   )
 where
 
@@ -35,7 +36,7 @@ class ChaincodeStubInterface ccs where
 
     -- setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
     -- getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
-    -- getStateByRange :: ccs -> String -> String -> Either Error StateQueryIterator
+    getStateByRange :: ccs -> Text -> Text -> Either Error StateQueryIterator
     -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
     -- getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
@@ -62,19 +63,16 @@ class ChaincodeStubInterface ccs where
     -- setEvent :: ccs -> String -> ByteArray -> Maybe Error
 
 
-
-
-
 -- The type class StateQueryIterator defines the behaviour of the types that expose functionalities
 -- for iterating over a set of key/value pairs returned by a range query.
--- class StateQueryIterator sqi where
+class StateQueryIteratorInterface sqi where
 --     -- hasNext provides information on current status of the iterator and whether there are
 --     -- more elements in the collection key-value pairs returned by the result.
---     hasNext :: sqi -> Bool
+    hasNext :: sqi -> Bool
 --     -- close terminantes the iteration.
---     close :: sqi -> Maybe Error
+    close :: sqi -> Maybe Error
 --     -- Provides the next key-value pair pointed by the iterator
---     next :: sqi -> Either Error Pb.KV
+    next :: sqi -> Either Error Pb.KV
 
 -- The type class HistoryQueryIterator defines the behaviour of the types that expose functionalities
 -- for iteratogin over a set of key modifications that are associated to the history of a key.

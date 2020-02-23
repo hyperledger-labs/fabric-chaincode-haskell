@@ -39,7 +39,7 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     -- transaction identifier.
     txId :: Text,
     -- channel identifier
-    channelId:: Text,
+    channelId :: Text,
     -- timestamp of the transaction invocation
     -- txTimestamp :: Maybe Pb.Timestamp,
     -- bytes of the X.509 identity of the originator of the transaction.
@@ -53,6 +53,13 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     recvStream :: StreamRecv ChaincodeMessage,
     sendStream :: StreamSend ChaincodeMessage
 }
+
+data DefaultStateQueryIterator = DefaultStateQueryIterator {
+    channelId :: Text
+    txId :: Text
+    response :: Pb.QueryResponse
+	currentLoc :: Int
+}   
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
 type MapStringBytes = Map String ByteString

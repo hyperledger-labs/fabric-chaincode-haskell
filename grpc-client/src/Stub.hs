@@ -66,7 +66,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
   -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
   -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
   --
-  -- getState :: ccs -> Text -> IO (Either Error ByteString)
+  getState :: ccs -> Text -> IO (Either Error ByteString)
   getState ccs key =
     let payload = getStatePayload key
         message =
@@ -108,8 +108,16 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
     -- -- getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
     -- getStateValiationParameter ccs key = Left notImplemented
     --
-    -- -- getStateByRange :: ccs -> String -> String -> Either Error StateQueryIterator
-    -- getStateByRange ccs startKey endKey = Left notImplemented
+    -- getStateByRange :: ccs -> Text -> Text -> Either Error StateQueryIterator
+    getStateByRange ccs startKey endKey = 
+      let payload = getStateByRangePayload startKey endKey
+          message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs) 
+      in do 
+        e <- (sendStream ccs) message
+        case e of
+          Left err -> error ("Error while streaming: " ++ show err)
+          Right _ -> pure ()
+        listenForResponse (recvStream ccs) 
     --
     -- -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     -- getStateByRangeWithPagination ccs startKey endKey pageSize bookmark = Left notImplemented
@@ -182,3 +190,11 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
     --
     -- -- setEvent :: ccs -> String -> ByteArray -> Maybe Error
     -- setEvent ccs = Right notImplemented
+
+instance StateQueryIteratorInterface DefaultStateQueryIterator where
+    -- hasNext :: sqi -> Bool
+    hasNext sqi = True
+    -- close :: sqi -> Maybe Error
+    close _ = Nothing
+    -- next :: sqi -> Either Error Pb.KV
+    next _ = Left _
