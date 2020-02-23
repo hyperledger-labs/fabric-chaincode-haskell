@@ -1,6 +1,6 @@
-name:                grpc-client
+name:                fabric-chaincode-haskell
 version:             0.1.0.0
-github:              "githubuser/grpc-client"
+github:              "nwaywood/fabric-chaincode-haskell"
 license:             Apache-2
 author:              "Nick Waywood, Allison Irvin"
 maintainer:          "example@example.com"
@@ -29,12 +29,14 @@ dependencies:
 - utf8-string
 
 library:
-  source-dirs: src
+  source-dirs:
+      - src
+      - protos-hs
 
 executables:
-  grpc-client-exe:
-    main:                Main.hs
-    source-dirs:         app
+  fabric-chaincode-haskell-exe:
+    main:                Sacc.hs
+    source-dirs:         examples
     ghc-options:
     - -threaded
     - -rtsopts
@@ -42,10 +44,10 @@ executables:
     - -Wall
     - -Wincomplete-uni-patterns
     dependencies:
-    - grpc-client
+    - fabric-chaincode-haskell
 
 tests:
-  grpc-client-test:
+  fabric-chaincode-haskell-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -53,4 +55,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - grpc-client
+    - fabric-chaincode-haskell
