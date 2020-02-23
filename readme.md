@@ -1,18 +1,18 @@
-# haskell-cc
+# fabric-chaincode-haskell
 
 NOTE: This project is currently a PRE-ALPHA and is NOT suitable for production use.
 
-Haskell-cc is a Haskell shim for Hyperledger Fabric to allow the authoring of smart contracts in Haskell.
+`fabric-chaincode-haskell` is a Haskell shim for Hyperledger Fabric to allow the authoring of smart contracts in Haskell.
 
 The project has three main parts:
 
-- `protos` and `google-protos/google/protobuf` - The source protobuf files that define the communication between the shim and the peer. The corresponding Haskell files are generated in `/grpc-client/src` (see `generate script` section below)
-- `grpc-client/src` - Contains the Shim
-- `grpc-client/app` - Contains the main executable which is an example usage of the shim
+- `protos` and `google-protos/google/protobuf` - The source protobuf files that define the communication between the shim and the peer. The corresponding Haskell files are generated in `protos-hs` (see `generate script` section below)
+- `src` - Contains the Shim
+- `examples` - Contains the main executable which is an example usage of the shim
 
 ## Installation
 
-To build the project, run the following from the `grpc-client` directory:
+To build the project, run the following from the root directory:
 
 ```
 stack build
@@ -43,15 +43,17 @@ stack run
 
 When the Fabric peer is running (see below), the Haskell process that is started does a number of things
 
-1. It connects to the Fabric peer through grpc (prints "okie dokey")
-2. It sends a REGISTER message to the peer and receives a REGISTERED response (prints "YAY REGGED")
-3. It receives a READY message from the peer (prints "YAY READY")
-4. It listens for an INIT message from the peer (prints "YAY INIT")
-5. It listens for TRANSACTION messages from the peer (prints "YAY TRANSACTION")
+1. It connects to the Fabric peer through gRPC
+2. It sends a REGISTER message to the peer and receives a REGISTERED response
+3. It receives a READY message from the peer
+4. It listens for an INIT message from the peer
+5. It listens for TRANSACTION messages from the peer
 
 ### Connecting to the Fabric peer
 
-Start the [Fabric network](https://github.ibm.com/chaincode-haskell/fabric-network) with the peer in development mode and without a chaincode container.
+The Haskell shim can be used with any Fabric network with a peer running in development mode.
+However, we have provided a very simple [Fabric network](https://github.com/airvin/fabric-network) for testing purposes.
+If you would like to use this network, start the Fabric network with the peer in development mode and without a chaincode container.
 This can be done with the `./start-no-cc.sh` script.
 The peer needs to be told about the chaincode process running with the `install` and `instantiate` commands.
 
@@ -70,8 +72,7 @@ The chaincode can then be invoked with the following examples:
 
 ```
 peer chaincode invoke -n mycc -c '{"Args":["get","a"]}' -C myc
-peer chaincode invoke -n mycc -c '{"Args":["put","b","60"]}' -C myc
-peer chaincode invoke -n mycc -c '{"Args":["getArgSlice"," this ","should ", "be ", "printed "]}' -C my
+peer chaincode invoke -n mycc -c '{"Args":["set","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 ```
 
@@ -86,8 +87,8 @@ The script requires the `compile-proto-file` binary, which can be installed from
 ## TODO
 
 - [x] Finish implementing shim functions and clean up shim module exports
+- [x] Add examples directory
 - [ ] Write unit tests for stub functions
 - [ ] Add support for concurrent transactions
 - [ ] Finish implementing all stub functions
-- [ ] Add examples directory
 - [ ] Publish to Hackage

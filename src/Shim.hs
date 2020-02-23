@@ -70,24 +70,24 @@ grpcRunner chaincodeStub client = do
   _ <- chaincodeSupportRegister $ ClientBiDiRequest 2000 [] $ biDiRequestFn
     chaincodeStub
 
-  print "testing"
+  print "Could not connect to peer"
 
 -- biDiRequestFn :: ClientCall -> MetadataMap -> StreamRecv ChaincodeMessage ->
 --          StreamSend ChaincodeMessage -> WritesDone -> IO ()
 biDiRequestFn chaincodeStub _call _mmap recv send _done = do
   e <- send regMessage :: IO (Either GRPCIOError ())
   case e of
-    Left  err -> error ("Error while streaming: " ++ show err)
-    Right _   -> trace "okie dokey" pure ()
+    Left  err -> error ("Error registering with peer: " ++ show err)
+    Right _   -> trace "Registering with peer" pure ()
   chatWithPeer recv send chaincodeStub
 
 -- main loop listening for messages from the peer
 chatWithPeer recv send chaincodeStub = do
   res <- recv
   case res of
-    Left  err            -> error ("OH MY GOD: " ++ show err)
+    Left err -> error ("Error during communication with peer: " ++ show err)
     Right (Just message) -> handler message recv send chaincodeStub
-    Right Nothing        -> print "I got no message... wtf"
+    Right Nothing -> print "Empty message received from peer"
   chatWithPeer recv send chaincodeStub
 
 -- function to process the different chainccode message types
@@ -99,15 +99,16 @@ handler
   -> IO ()
 handler message recv send chaincodeStub = case message of
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeREGISTERED) }
-    -> print "YAY REGGED"
+    -> print "REGISTERED message received from the peer"
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeREADY) }
-    -> print "YAY READY"
+    -> print "READY message received from the peer"
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeINIT) }
-    -> trace "YAY INIT" $ handleInit message recv send (initFn chaincodeStub)
+    -> trace "INIT message received from the peer"
+      $ handleInit message recv send (initFn chaincodeStub)
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeTRANSACTION) }
-    -> trace "YAY TRANSACTION"
+    -> trace "TRANSACTION message received from the peer"
       $ handleInvoke message recv send (invokeFn chaincodeStub)
-  s -> print ("Goodie:" ++ show s)
+  s -> print ("Unknown message received from peer:" ++ show s)
 
 handleInit
   :: ChaincodeMessage
@@ -131,7 +132,7 @@ handleInit mes recv send initFn
               ) :: IO (Either GRPCIOError ())
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
-            Right _   -> trace "okie dokey init" pure ()
+            Right _   -> pure ()
 
 
 handleInvoke
@@ -156,7 +157,7 @@ handleInvoke mes recv send invokeFn
               ) :: IO (Either GRPCIOError ())
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
-            Right _   -> trace "okie dokey invoke transaction" pure ()
+            Right _   -> pure ()
 
 newChaincodeStub
   :: ChaincodeMessage
@@ -171,8 +172,8 @@ newChaincodeStub mes recv send
         Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
           -> let maybeSignedProposal = chaincodeMessageProposal mes
              in  case maybeSignedProposal of
-                                  --  If the SignedProposal is empty, populate the stub with just the 
-                                  -- args, txId, channelId, decorations, send and recv
+                                                                                                      --  If the SignedProposal is empty, populate the stub with just the 
+                                                                                                      -- args, txId, channelId, decorations, send and recv
                    Nothing -> Right $ DefaultChaincodeStub
                      args
                      (toStrict $ chaincodeMessageTxid mes)
@@ -214,16 +215,10 @@ getProposal :: Pb.SignedProposal -> Either ParseError Pb.Proposal
 getProposal signedProposal =
   Suite.fromByteString (signedProposalProposalBytes signedProposal)
 
--- -- TODO: Figure out where the SignatureHeader is defined
+-- -- TODO: Get SignatureHeader and implement getCreator
 -- -- and then get creator from the header.
 getCreator :: Pb.Proposal -> Maybe ByteString
 getCreator _ = Nothing
--- getCreator proposal =
---   let eErrSignatureHeader =
---         Suite.fromByteString (proposalHeader proposal)
---   in  case eErrSignatureHeader of
---         Left  _      -> Nothing
---         Right header -> Just $ getCreator header
 
 getTransient :: Pb.Proposal -> Maybe MapTextBytes
 getTransient proposal =
@@ -233,16 +228,6 @@ getTransient proposal =
         Right payload ->
           Just (mapKeys toStrict $ chaincodeProposalPayloadTransientMap payload)
 
--- -- TODO: Need to find ChannelHeader and SignatureHeader
+-- -- TODO: Get ChannelHeader and SignatureHeader and implement getBinding
 getBinding :: Pb.Proposal -> Maybe MapTextBytes
 getBinding _ = Nothing
--- getBinding proposal =
---   let eErrChannelHeader   = Suite.fromByteString (? proposal)
---       eErrSignatureHeader = Suite.fromByteString (? proposal)
---       maybeCreator        = getCreator proposal
---   in  case (eErrChannelHeader, eErrSignatureHeader, maybeCreator) of
---         (Left _, _     , _      ) -> Nothing
---         (_     , Left _, _      ) -> Nothing
---         (_     , _     , Nothing) -> Nothing
---         (Right chdr, Right shdr, Just creator) ->
---           Just $ hash ((getNonce shdr) ++ creator ++ (getEpoch chdr))
