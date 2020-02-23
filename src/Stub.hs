@@ -36,9 +36,9 @@ listenForResponse recv = do
     Right (Just ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeRESPONSE), chaincodeMessagePayload = payload })
       -> pure $ Right payload
     Right (Just ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeERROR), chaincodeMessagePayload = payload })
-      -> pure $ Left $ Error "Peer failed to do what you wanted"
+      -> pure $ Left $ Error "Peer failed to complete stub invocation request"
     Right (Just _) -> listenForResponse recv
-    Right Nothing  -> pure $ Left $ Error "I got no message... wtf"
+    Right Nothing  -> pure $ Left $ Error "Empty message received from peer"
 
 instance ChaincodeStubInterface DefaultChaincodeStub where
     -- getArgs :: ccs -> Vector ByteString
