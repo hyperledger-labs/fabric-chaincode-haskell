@@ -6,7 +6,7 @@ NOTE: This project is currently a PRE-ALPHA and is NOT suitable for production u
 
 The project has three main parts:
 
-- `protos` and `google-protos/google/protobuf` - The source protobuf files that define the communication between the shim and the peer. The corresponding Haskell files are generated in `protos-hs` (see `generate script` section below)
+- `protos` and `google-protos/google/protobuf` - The source protobuf files that define the communication between the shim and the peer. The corresponding Haskell files are generated in `protos-hs`
 - `src` - Contains the Shim
 - `examples` - Contains the main executable which is an example usage of the shim
 
@@ -40,6 +40,8 @@ The Haskell chaincode process can be started with:
 ```
 stack run
 ```
+
+By default it runs the `sacc` example.
 
 When the Fabric peer is running (see below), the Haskell process that is started does a number of things
 
@@ -76,14 +78,6 @@ peer chaincode invoke -n mycc -c '{"Args":["put","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["set","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 ```
-
-## Generate script
-
-Note: Due to [an issue](https://github.com/awakesecurity/proto3-suite/issues/119) with the latest `compile-proto-file` binary, it generates code that doesn't type check. Until this issue is resolved, you need to manually convert all `HsJSONPB.SwaggerObject` to `Hs.Just HsJSONPB.SwaggerObject` within the generated files.
-
-The `generate.sh` script is used to generate the Haskell source files from the `.proto` files.
-
-The script requires the `compile-proto-file` binary, which can be installed from here https://github.com/awakesecurity/proto3-suite
 
 ## TODO
 

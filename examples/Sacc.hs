@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Sacc where
 
 import           Shim                           ( start
                                                 , successPayload
@@ -22,25 +22,22 @@ main :: IO ()
 main = Shim.start chaincodeStub
 
 chaincodeStub :: ChaincodeStub
-chaincodeStub = ChaincodeStub {initFn = initFunc, invokeFn = invokeFunc}
+chaincodeStub = ChaincodeStub { initFn = initFunc, invokeFn = invokeFunc }
 
 initFunc :: DefaultChaincodeStub -> IO Pb.Response
-initFunc s
-  = let initArgs = getStringArgs s
-    in
-      if (Prelude.length initArgs == 2)
+initFunc s =
+  let initArgs = getStringArgs s
+  in  if Prelude.length initArgs == 2
         then
           let response =
-                putState s (head initArgs) (encodeUtf8 $ head $ tail $ initArgs)
+                putState s (head initArgs) (encodeUtf8 $ head $ tail initArgs)
           in  do
                 e <- response :: IO (Either Error ByteString)
                 case e of
                   Left  _ -> pure $ errorPayload "Failed to create asset"
                   Right _ -> pure $ successPayload Nothing
-        else
-          ( pure
+        else pure
           $ errorPayload "Incorrect arguments. Expecting a key and a value"
-          )
 
 invokeFunc :: DefaultChaincodeStub -> IO Pb.Response
 invokeFunc s =
@@ -51,7 +48,7 @@ invokeFunc s =
         Right (_    , parameters) -> get s parameters
 
 set :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
-set s params = if (Prelude.length params == 2)
+set s params = if Prelude.length params == 2
   then
     let response = putState s (head params) (encodeUtf8 $ head $ tail params)
     in  do
@@ -59,10 +56,10 @@ set s params = if (Prelude.length params == 2)
           case e of
             Left  _ -> pure $ errorPayload "Failed to set asset"
             Right _ -> pure $ successPayload Nothing
-  else (pure $ errorPayload "Incorrect arguments. Expecting a key and a value")
+  else pure $ errorPayload "Incorrect arguments. Expecting a key and a value"
 
 get :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
-get s params = if (Prelude.length params == 1)
+get s params = if Prelude.length params == 1
   then
     let response = getState s (head params)
     in  do
@@ -70,4 +67,4 @@ get s params = if (Prelude.length params == 1)
           case e of
             Left  _ -> pure $ errorPayload "Failed to get asset"
             Right a -> trace (BSU.toString a) (pure $ successPayload Nothing)
-  else (pure $ errorPayload "Incorrect arguments. Expecting a key")
+  else pure $ errorPayload "Incorrect arguments. Expecting a key"
