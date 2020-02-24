@@ -161,46 +161,46 @@ newChaincodeStub
   -> StreamRecv ChaincodeMessage
   -> StreamSend ChaincodeMessage
   -> Either Error DefaultChaincodeStub
-newChaincodeStub mes recv send
-  = let eErrInput = getChaincodeInput mes
-    in
-      case eErrInput of
-        Left err -> Left $ error (show err)
-        Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
-          -> let maybeSignedProposal = chaincodeMessageProposal mes
-             in  case maybeSignedProposal of
-                                                                                                  --  If the SignedProposal is empty, populate the stub with just the 
-                                                                                                  -- args, txId, channelId, decorations, send and recv
-                   Nothing -> Right $ DefaultChaincodeStub
-                     args
-                     (toStrict $ chaincodeMessageTxid mes)
-                     (toStrict $ chaincodeMessageChannelId mes)
-                     Nothing
-                     Nothing
-                     Nothing
-                     Nothing
-                     Nothing
-                     (mapKeys toStrict decorations)
-                     recv
-                     send
-                    --  If SignedProposal is not empty, get the proposal from it
-                    -- and the creator, transient and binding from the proposal
-                   Just signedProposal ->
-                     let eErrProposal = getProposal signedProposal
-                     in  case eErrProposal of
-                           Left  err      -> Left $ error (show err)
-                           Right proposal -> Right $ DefaultChaincodeStub
-                             args
-                             (toStrict $ chaincodeMessageTxid mes)
-                             (toStrict $ chaincodeMessageChannelId mes)
-                             (getCreator proposal)
-                             (Just signedProposal)
-                             (Just proposal)
-                             (getTransient proposal)
-                             (getBinding proposal)
-                             (mapKeys toStrict decorations)
-                             recv
-                             send
+newChaincodeStub mes recv send =
+  let eErrInput = getChaincodeInput mes
+  in
+    case eErrInput of
+      Left err -> Left $ error (show err)
+      Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
+        -> let maybeSignedProposal = chaincodeMessageProposal mes
+           in  case maybeSignedProposal of
+                --  If the SignedProposal is empty, populate the stub with just the
+                -- args, txId, channelId, decorations, send and recv
+                 Nothing -> Right $ DefaultChaincodeStub
+                   args
+                   (toStrict $ chaincodeMessageTxid mes)
+                   (toStrict $ chaincodeMessageChannelId mes)
+                   Nothing
+                   Nothing
+                   Nothing
+                   Nothing
+                   Nothing
+                   (mapKeys toStrict decorations)
+                   recv
+                   send
+                  --  If SignedProposal is not empty, get the proposal from it
+                  -- and the creator, transient and binding from the proposal
+                 Just signedProposal ->
+                   let eErrProposal = getProposal signedProposal
+                   in  case eErrProposal of
+                         Left  err      -> Left $ error (show err)
+                         Right proposal -> Right $ DefaultChaincodeStub
+                           args
+                           (toStrict $ chaincodeMessageTxid mes)
+                           (toStrict $ chaincodeMessageChannelId mes)
+                           (getCreator proposal)
+                           (Just signedProposal)
+                           (Just proposal)
+                           (getTransient proposal)
+                           (getBinding proposal)
+                           (mapKeys toStrict decorations)
+                           recv
+                           send
 
 
 -- These are some helper functions to process the unmarshalling of different types
