@@ -169,8 +169,8 @@ newChaincodeStub mes recv send =
       Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
         -> let maybeSignedProposal = chaincodeMessageProposal mes
            in  case maybeSignedProposal of
-                                                                                                                    --  If the SignedProposal is empty, populate the stub with just the
-                                                                                                                    -- args, txId, channelId, decorations, send and recv
+                --  If the SignedProposal is empty, populate the stub with just the
+                -- args, txId, channelId, decorations, send and recv
                  Nothing -> Right $ DefaultChaincodeStub
                    args
                    (toStrict $ chaincodeMessageTxid mes)
