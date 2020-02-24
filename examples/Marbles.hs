@@ -5,6 +5,7 @@
 -- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["readMarble","marble1"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["deleteMarble","marble1"]}' -C myc
+-- peer chaincode invoke -n mycc -c '{"Args":["transferMarble","marble1", "Nick"]}' -C myc
 
 module Marbles where
 
@@ -24,14 +25,16 @@ import           Data.Text                      ( Text
                                                 , pack
                                                 )
 import qualified Data.ByteString               as BS
-import           Data.ByteString.UTF8          as BSU
+import qualified Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
+
 import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
                                                 , toEncoding
                                                 , genericToEncoding
                                                 , defaultOptions
                                                 , encode
+                                                , decode
                                                 )
 import           Debug.Trace
 
@@ -63,13 +66,13 @@ invokeFunc s
   = let e = getFunctionAndParameters s
     in
       case e of
-        Left  _                            -> pure $ errorPayload ""
-        Right ("initMarble"  , parameters) -> initMarble s parameters
-        -- Right ("transferMarble", parameters) -> transferMarble s parameters
+        Left  _                              -> pure $ errorPayload ""
+        Right ("initMarble"    , parameters) -> initMarble s parameters
+        Right ("transferMarble", parameters) -> transferMarble s parameters
         -- Right ("transferMarbleBasedOnColor", parameters) ->
         --   transferMarbleBasedOnColor s parameters
-        Right ("deleteMarble", parameters) -> deleteMarble s parameters
-        Right ("readMarble"  , parameters) -> readMarble s parameters
+        Right ("deleteMarble"  , parameters) -> deleteMarble s parameters
+        Right ("readMarble"    , parameters) -> readMarble s parameters
         -- Right ("queryMarblesByOwner", parameters) ->
         --   queryMarblesByOwner s parameters
         -- Right ("queryMarbles", parameters) -> queryMarbles s parameters
@@ -107,6 +110,36 @@ initMarble s params = if Prelude.length params == 4
   else pure $ errorPayload
     "Incorrect arguments. Need a marble name, color, size and owner"
 
+transferMarble :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
+transferMarble s params = if Prelude.length params == 2
+  then do
+--   Check that the marble already exists
+    e <- getState s (head params)
+    case e of
+      Left  _        -> pure $ errorPayload "Failed to get marble"
+      Right response -> if BS.length response == 0
+        then pure $ errorPayload "Marble not found"
+        else
+-- Unmarshal the marble
+          let maybeMarble = decode (LBS.fromStrict response) :: Maybe Marble
+              marbleOwner = head $ tail params
+          in  case maybeMarble of
+                Nothing -> pure $ errorPayload "Error decoding marble"
+                Just oldMarble ->
+-- Create a new marble instance with the new owner
+                  let newMarble = marbleWithNewOwner marbleOwner oldMarble
+                  in 
+-- Marshal new marble to JSON
+                      let marbleJSON = LBS.toStrict $ encode newMarble
+                             in  do
+                                   ee <- putState s (head params) marbleJSON
+                                   case ee of
+                                     Left _ ->
+                                       pure $ errorPayload "Failed to create marble"
+                                     Right _ -> pure $ successPayload Nothing
+  else pure
+    $ errorPayload "Incorrect arguments. Need a marble name and new owner"
+
     -- TODO: Once indexing by color has been implemented, need to 
     -- get marble and also delete marble composite key
 deleteMarble :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
@@ -135,4 +168,13 @@ parseMarble params = Marble
   , color      = head $ tail params
   , size       = head $ tail $ tail params
   , owner      = head $ tail $ tail $ tail params
+  }
+
+marbleWithNewOwner :: Text -> Marble -> Marble
+marbleWithNewOwner newOwner oldMarble = Marble
+  { objectType = "marble"
+  , name       = name oldMarble
+  , color      = color oldMarble
+  , size       = size oldMarble
+  , owner      = newOwner
   }
