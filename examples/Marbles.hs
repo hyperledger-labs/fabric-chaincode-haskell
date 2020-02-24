@@ -15,7 +15,6 @@ import           Shim                           ( start
                                                 , ChaincodeStub(..)
                                                 , ChaincodeStubInterface(..)
                                                 , DefaultChaincodeStub
-                                                , Error
                                                 )
 
 import           Peer.ProposalResponse         as Pb
@@ -24,7 +23,6 @@ import           Data.Text                      ( Text
                                                 , unpack
                                                 , pack
                                                 )
-import           Data.Text.Encoding             ( encodeUtf8 )
 import qualified Data.ByteString               as BS
 import           Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
