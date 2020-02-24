@@ -14,7 +14,7 @@ module Shim
 where
 
 import qualified Data.ByteString.Lazy          as LBS
-import           Data.ByteString.Char8         as BC
+import qualified Data.ByteString.Char8         as BC
 import           Data.Map                       ( mapKeys )
 import           Data.Text.Encoding            as TSE
 import           Data.Text
@@ -47,13 +47,12 @@ import           Types                          ( DefaultChaincodeStub(..)
 import           Debug.Trace
 
 clientConfig :: ClientConfig
-clientConfig = ClientConfig
-  { clientServerHost = "localhost"
-  , clientServerPort = 7052
-  , clientArgs       = []
-  , clientSSLConfig  = Nothing
-  , clientAuthority  = Nothing
-  }
+clientConfig = ClientConfig { clientServerHost = "localhost"
+                            , clientServerPort = 7052
+                            , clientArgs       = []
+                            , clientSSLConfig  = Nothing
+                            , clientAuthority  = Nothing
+                            }
 
 -- TODO: start :: ChaincodeStub a => (a -> Pb.Response) -> IO ()
 start :: ChaincodeStub -> IO ()
@@ -70,7 +69,7 @@ grpcRunner chaincodeStub client = do
   _ <- chaincodeSupportRegister $ ClientBiDiRequest 2000 [] $ biDiRequestFn
     chaincodeStub
 
-  print "Could not connect to peer"
+  putStrLn "Could not connect to peer"
 
 -- biDiRequestFn :: ClientCall -> MetadataMap -> StreamRecv ChaincodeMessage ->
 --          StreamSend ChaincodeMessage -> WritesDone -> IO ()
@@ -87,7 +86,7 @@ chatWithPeer recv send chaincodeStub = do
   case res of
     Left err -> error ("Error during communication with peer: " ++ show err)
     Right (Just message) -> handler message recv send chaincodeStub
-    Right Nothing -> print "Empty message received from peer"
+    Right Nothing -> putStrLn "Empty message received from peer"
   chatWithPeer recv send chaincodeStub
 
 -- function to process the different chainccode message types
@@ -99,16 +98,16 @@ handler
   -> IO ()
 handler message recv send chaincodeStub = case message of
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeREGISTERED) }
-    -> print "REGISTERED message received from the peer"
+    -> putStrLn "REGISTERED message received from the peer"
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeREADY) }
-    -> print "READY message received from the peer"
+    -> putStrLn "READY message received from the peer"
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeINIT) }
     -> trace "INIT message received from the peer"
       $ handleInit message recv send (initFn chaincodeStub)
   ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeTRANSACTION) }
     -> trace "TRANSACTION message received from the peer"
       $ handleInvoke message recv send (invokeFn chaincodeStub)
-  s -> print ("Unknown message received from peer:" ++ show s)
+  s -> putStrLn ("Unknown message received from peer:" ++ show s)
 
 handleInit
   :: ChaincodeMessage
@@ -116,10 +115,9 @@ handleInit
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInit mes recv send initFn
-  = let eStub = newChaincodeStub mes recv send
-    in
-      case eStub of
+handleInit mes recv send initFn =
+  let eStub = newChaincodeStub mes recv send
+  in  case eStub of
         Left  err  -> error ("Error while creating stub: " ++ show err)
         Right stub -> do
           response <- initFn stub
@@ -141,10 +139,9 @@ handleInvoke
   -> StreamSend ChaincodeMessage
   -> (DefaultChaincodeStub -> IO Pb.Response)
   -> IO ()
-handleInvoke mes recv send invokeFn
-  = let eStub = newChaincodeStub mes recv send
-    in
-      case eStub of
+handleInvoke mes recv send invokeFn =
+  let eStub = newChaincodeStub mes recv send
+  in  case eStub of
         Left  err  -> error ("Error while creating stub: " ++ show err)
         Right stub -> do
           response <- invokeFn stub
@@ -217,7 +214,7 @@ getProposal signedProposal =
 
 -- -- TODO: Get SignatureHeader and implement getCreator
 -- -- and then get creator from the header.
-getCreator :: Pb.Proposal -> Maybe ByteString
+getCreator :: Pb.Proposal -> Maybe BC.ByteString
 getCreator _ = Nothing
 
 getTransient :: Pb.Proposal -> Maybe MapTextBytes
