@@ -4,6 +4,7 @@
 -- Example invocations:
 -- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["readMarble","marble1"]}' -C myc
+-- peer chaincode invoke -n mycc -c '{"Args":["deleteMarble","marble1"]}' -C myc
 
 module Marbles where
 
@@ -64,13 +65,13 @@ invokeFunc s
   = let e = getFunctionAndParameters s
     in
       case e of
-        Left  _                          -> pure $ errorPayload ""
-        Right ("initMarble", parameters) -> initMarble s parameters
+        Left  _                            -> pure $ errorPayload ""
+        Right ("initMarble"  , parameters) -> initMarble s parameters
         -- Right ("transferMarble", parameters) -> transferMarble s parameters
         -- Right ("transferMarbleBasedOnColor", parameters) ->
         --   transferMarbleBasedOnColor s parameters
-        -- Right ("deleteMarble", parameters) -> deleteMarble s parameters
-        Right ("readMarble", parameters) -> readMarble s parameters
+        Right ("deleteMarble", parameters) -> deleteMarble s parameters
+        Right ("readMarble"  , parameters) -> readMarble s parameters
         -- Right ("queryMarblesByOwner", parameters) ->
         --   queryMarblesByOwner s parameters
         -- Right ("queryMarbles", parameters) -> queryMarbles s parameters
@@ -107,6 +108,17 @@ initMarble s params = if Prelude.length params == 4
                   Right _ -> pure $ successPayload Nothing
   else pure $ errorPayload
     "Incorrect arguments. Need a marble name, color, size and owner"
+
+    -- TODO: Once indexing by color has been implemented, need to 
+    -- get marble and also delete marble composite key
+deleteMarble :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
+deleteMarble s params = if Prelude.length params == 1
+  then do
+    e <- delState s (head params)
+    case e of
+      Left  _ -> pure $ errorPayload "Failed to delete marble"
+      Right _ -> pure $ successPayload Nothing
+  else pure $ errorPayload "Incorrect arguments. Need a marble name"
 
 readMarble :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
 readMarble s params = if Prelude.length params == 1
