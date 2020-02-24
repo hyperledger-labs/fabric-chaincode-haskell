@@ -1,6 +1,6 @@
 # fabric-chaincode-haskell
 
-NOTE: This project is currently a PRE-ALPHA and is NOT suitable for production use.
+:warning: This project is currently a PRE-ALPHA and is NOT suitable for production use. :warning:
 
 `fabric-chaincode-haskell` is a Haskell shim for Hyperledger Fabric to allow the authoring of smart contracts in Haskell.
 
@@ -85,4 +85,12 @@ peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 - [ ] Write unit tests for stub functions
 - [ ] Add support for concurrent transactions
 - [ ] Finish implementing all stub functions
+- [ ] Add Contributing documentation
 - [ ] Publish to Hackage
+
+
+## LICENCE
+
+Source code files are made available under the [Apache License](LICENSE), Version 2.0 (Apache-2.0)
+
+
