@@ -2,6 +2,8 @@
 
 :warning: This project is currently a PRE-ALPHA and is NOT suitable for production use. :warning:
 
+This project is featured in the [Towards Formally Verified Smart Contracts with Haskell](https://sched.co/ZdFh) talk presented by [@nwaywood](https://github.com/nwaywood) and [@airvin](https://github.com/airvin)
+
 `fabric-chaincode-haskell` is a Haskell shim for Hyperledger Fabric to allow the authoring of smart contracts in Haskell.
 
 The project has three main parts:
