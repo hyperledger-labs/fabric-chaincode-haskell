@@ -126,16 +126,15 @@ transferMarble s params = if Prelude.length params == 2
                 Nothing -> pure $ errorPayload "Error decoding marble"
                 Just oldMarble ->
                   -- Create a new marble instance with the new owner
-                  let newMarble = marbleWithNewOwner marbleOwner oldMarble
-                  in 
+                  let newMarble  = marbleWithNewOwner marbleOwner oldMarble
                       -- Marshal new marble to JSON
-                      let marbleJSON = LBS.toStrict $ encode newMarble
-                      in  do
-                            ee <- putState s (head params) marbleJSON
-                            case ee of
-                              Left _ ->
-                                pure $ errorPayload "Failed to create marble"
-                              Right _ -> pure $ successPayload Nothing
+                      marbleJSON = LBS.toStrict $ encode newMarble
+                  in  do
+                        ee <- putState s (head params) marbleJSON
+                        case ee of
+                          Left _ ->
+                            pure $ errorPayload "Failed to create marble"
+                          Right _ -> pure $ successPayload Nothing
   else pure
     $ errorPayload "Incorrect arguments. Need a marble name and new owner"
 
