@@ -3,7 +3,7 @@ version:             0.1.0.0
 github:              "nwaywood/fabric-chaincode-haskell"
 license:             Apache-2
 author:              "Nick Waywood, Allison Irvin"
-maintainer:          "example@example.com"
+maintainer:          "n.waywood@gmail.com"
 copyright:           "2020 Nick Waywood"
 
 # Metadata used when publishing your package
@@ -35,7 +35,7 @@ library:
     - protos-hs
 
 executables:
-  fabric-chaincode-haskell-exe:
+  sacc-exe:
     main:                Sacc.hs
     source-dirs:         examples
     ghc-options:
@@ -45,6 +45,18 @@ executables:
     - -Wall
     - -Wincomplete-uni-patterns
     - -main-is Sacc
+    dependencies:
+    - fabric-chaincode-haskell
+  marbles-exe:
+    main:                Marbles.hs
+    source-dirs:         examples
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    - -Wincomplete-uni-patterns
+    - -main-is Marbles
     dependencies:
     - fabric-chaincode-haskell
 
