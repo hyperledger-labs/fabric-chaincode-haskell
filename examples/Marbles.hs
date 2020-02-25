@@ -97,7 +97,7 @@ initMarble s params = if Prelude.length params == 4
       Left  _        -> pure $ errorPayload "Failed to retrieve marble"
       Right response -> if BS.length response /= 0
         then pure $ errorPayload
-          (pack ("This marble already exists: " ++ unpack $ head params))
+          (pack ("This marble already exists: " ++ (unpack $ head params)))
         else
           -- marshal marble to JSON
           let marbleJSON = LBS.toStrict $ encode (parseMarble params)
