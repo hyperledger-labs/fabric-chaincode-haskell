@@ -59,6 +59,18 @@ executables:
     - -main-is Marbles
     dependencies:
     - fabric-chaincode-haskell
+  fabcar-exe:
+    main:                Fabcar.hs
+    source-dirs:         examples
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    - -Wincomplete-uni-patterns
+    - -main-is Fabcar
+    dependencies:
+    - fabric-chaincode-haskell
 
 tests:
   fabric-chaincode-haskell-test:
