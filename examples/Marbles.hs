@@ -121,7 +121,7 @@ transferMarble s params = if Prelude.length params == 2
         else
           -- Unmarshal the marble
           let maybeMarble = decode (LBS.fromStrict response) :: Maybe Marble
-              marbleOwner = head $ tail params
+              marbleOwner = params !! 1
           in  case maybeMarble of
                 Nothing -> pure $ errorPayload "Error decoding marble"
                 Just oldMarble ->
@@ -161,10 +161,10 @@ readMarble s params = if Prelude.length params == 1
 
 parseMarble :: [Text] -> Marble
 parseMarble params = Marble { objectType = "marble"
-                            , name       = head params
-                            , color      = head $ tail params
-                            , size       = head $ tail $ tail params
-                            , owner      = head $ tail $ tail $ tail params
+                            , name       = params !! 0
+                            , color      = params !! 1
+                            , size       = params !! 2 
+                            , owner      = params !! 3
                             }
 
 marbleWithNewOwner :: Text -> Marble -> Marble

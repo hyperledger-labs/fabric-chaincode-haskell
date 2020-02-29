@@ -4,6 +4,7 @@
 -- peer chaincode invoke -n mycc -c '{"Args":["initLedger"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["createCar", "CAR10", "Ford", "Falcon", "White", "Al"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["queryCar", "CAR10"]}' -C myc
+-- peer chaincode invoke -n mycc -c '{"Args":["changeCarOwner", "CAR10", "Nick"]}' -C myc
 
 module Fabcar where
 
@@ -204,11 +205,11 @@ changeCarOwner s params = if Prelude.length params == 2
         else
 -- Unmarshal the car
           let maybeCar = decode (LBS.fromStrict response) :: Maybe Car
-              carOwner = head $ tail params
+              newOwner = params !! 1
           in  case maybeCar of
                 Nothing -> pure $ errorPayload "Error decoding car"
                 Just oldCar ->
-                  let newCar  = carWithNewOwner oldCar carOwner
+                  let newCar  = carWithNewOwner oldCar newOwner
                       carJson = LBS.toStrict $ encode newCar
                   in  do
                         ee <- putState s (head params) carJson

@@ -30,7 +30,7 @@ initFunc s =
   in  if Prelude.length initArgs == 2
         then
           let response =
-                putState s (head initArgs) (encodeUtf8 $ head $ tail initArgs)
+                putState s (head initArgs) (encodeUtf8 $ initArgs !! 1)
           in  do
                 e <- response :: IO (Either Error ByteString)
                 case e of
@@ -50,7 +50,7 @@ invokeFunc s =
 set :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
 set s params = if Prelude.length params == 2
   then
-    let response = putState s (head params) (encodeUtf8 $ head $ tail params)
+    let response = putState s (head params) (encodeUtf8 $ params !! 1)
     in  do
           e <- response :: IO (Either Error ByteString)
           case e of
