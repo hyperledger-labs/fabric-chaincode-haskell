@@ -13,10 +13,11 @@ import           Data.Vector                   as Vector
                                                 , toList
                                                 , foldr
                                                 , empty
+                                                , (!)
                                                 )
 import qualified Data.ByteString.Lazy          as LBS
 
-import           Peer.ChaincodeShim
+import qualified Peer.ChaincodeShim            as Pb
 
 import           Network.GRPC.HighLevel
 import           Google.Protobuf.Timestamp     as Pb
@@ -30,14 +31,14 @@ import           Types
 
 -- NOTE: When support for concurrency transaction is added, this function will no longer be required
 -- as the stub function will block and listen for responses over a channel when the code is concurrent
-listenForResponse :: StreamRecv ChaincodeMessage -> IO (Either Error ByteString)
+listenForResponse :: StreamRecv Pb.ChaincodeMessage -> IO (Either Error ByteString)
 listenForResponse recv = do
   res <- recv
   case res of
     Left err -> pure $ Left $ GRPCError err
-    Right (Just ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeRESPONSE), chaincodeMessagePayload = payload })
+    Right (Just Pb.ChaincodeMessage { Pb.chaincodeMessageType = Enumerated (Right Pb.ChaincodeMessage_TypeRESPONSE), Pb.chaincodeMessagePayload = payload })
       -> pure $ Right payload
-    Right (Just ChaincodeMessage { chaincodeMessageType = Enumerated (Right ChaincodeMessage_TypeERROR), chaincodeMessagePayload = payload })
+    Right (Just Pb.ChaincodeMessage { Pb.chaincodeMessageType = Enumerated (Right Pb.ChaincodeMessage_TypeERROR), Pb.chaincodeMessagePayload = payload })
       -> pure $ Left $ Error "Peer failed to complete stub invocation request"
     Right (Just _) -> listenForResponse recv
     Right Nothing  -> pure $ Left $ Error "Empty message received from peer"
@@ -115,7 +116,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
     let payload = getStateByRangePayload startKey endKey
         message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs) 
         bsToSqi :: ByteString -> Either Error StateQueryIterator
-        bsToSqi bs = let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError QueryResponse in
+        bsToSqi bs = let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse in
           case eeaQueryResponse of
             Left _ -> Left ParseError
             Right queryResponse -> Right StateQueryIterator {
@@ -211,3 +212,19 @@ instance StateQueryIteratorInterface StateQueryIterator where
     close _ = Nothing
     -- next :: sqi -> Either Error Pb.KV
     next _ = Left $ Error "not implemented"
+
+nextResult :: StateQueryIterator -> IO (Either Error Pb.QueryResultBytes)
+nextResult sqi = let x = _one =<< (fetchNextQueryResult sqi) in _two
+  -- if (sqiCurrentLoc sqi) < Prelude.length (Pb.queryResponseResults $ sqiResponse sqi) then
+  --   pure $ Right $  (Pb.queryResponseResults $ sqiResponse sqi) ! (sqiCurrentLoc sqi)
+  -- else pure $ Left $ Error "what"     
+  --   if Pb.queryResponseHasMore $ sqiResponse sqi then 
+  --     x
+  --     -- (nextResult =<<) =<< (fetchNextQueryResult sqi)
+  --     -- _ <$> (fetchNextQueryResult sqi)
+  --   else pure $ Left $ Error "Error retrieving next queryResult"
+
+
+  -- x = fetchNextQueryResult sqi >>= (\eeSqi -> pure $ eeSqi >>= (\a -> pure $ nextResult a))
+fetchNextQueryResult :: StateQueryIterator -> IO (Either Error StateQueryIterator)
+fetchNextQueryResult sqi =  pure $ Left $ Error "not yet implemented"
