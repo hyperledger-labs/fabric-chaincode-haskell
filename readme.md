@@ -38,10 +38,10 @@ Note: Since running chaincode in production mode depends on a language specific 
 The Haskell chaincode process can be started with:
 
 ```
-stack run
+stack run sacc-exe
 ```
 
-By default it runs the `sacc` example.
+To run the `sacc` example. Look at `package.yaml` to see available executables.
 
 When the Fabric peer is running (see below), the Haskell process that is started does a number of things
 
