@@ -1,6 +1,6 @@
 module Interfaces
   ( ChaincodeStubInterface(..)
-  , StateQueryIterator(..)
+  , StateQueryIteratorInterface(..)
   )
 where
 
@@ -36,7 +36,7 @@ class ChaincodeStubInterface ccs where
 
     -- setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
     -- getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
-    getStateByRange :: ccs -> Text -> Text -> Either Error StateQueryIterator
+    getStateByRange :: ccs -> Text -> Text -> IO (Either Error StateQueryIterator)
     -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
     -- getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)

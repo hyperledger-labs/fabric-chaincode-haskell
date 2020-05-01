@@ -2,6 +2,7 @@
 
 module Messages where
 
+import qualified Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
 import           Data.ByteString               as BS
 import           Data.Text
@@ -64,6 +65,14 @@ putStatePayload key value = Pb.PutState
 delStatePayload :: Text -> Pb.DelState
 delStatePayload key =
   Pb.DelState {delStateKey = fromStrict key, delStateCollection = ""}
+
+getStateByRangePayload :: Text -> Text -> Pb.GetStateByRange
+getStateByRangePayload startKey endKey = Pb.GetStateByRange {
+    getStateByRangeStartKey = fromStrict startKey
+    , getStateByRangeEndKey = fromStrict endKey
+    , getStateByRangeCollection = ""
+    , getStateByRangeMetadata = BSU.fromString ""
+}
 
 -- buildChaincodeMessage
 --   :: Enumerated Pb.ChaincodeMessage_Type

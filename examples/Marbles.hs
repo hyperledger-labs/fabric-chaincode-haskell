@@ -3,9 +3,11 @@
 
 -- Example invocations:
 -- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc
+-- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble2","blue","large","Nick"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["readMarble","marble1"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["deleteMarble","marble1"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["transferMarble","marble1", "Nick"]}' -C myc
+-- peer chaincode invoke -n mycc -c '{"Args":["getMarblesByRange","marble1", "marble3"]}' -C myc
 
 module Marbles where
 
@@ -78,8 +80,7 @@ invokeFunc s =
       -- Right ("queryMarbles", parameters) -> queryMarbles s parameters
       -- Right ("getHistoryForMarble", parameters) ->
       --   getHistoryForMarble s parameters
-      -- Right ("getMarblesByRange", parameters) ->
-      --   getMarblesByRange s parameters
+      Right ("getMarblesByRange", parameters) -> getMarblesByRange s parameters
       -- Right ("getMarblesByRangeWithPagination", parameters) ->
       --   getMarblesByRangeWithPagination s parameters
       -- Right ("queryMarblesWithPagination", parameters) ->
@@ -158,6 +159,16 @@ readMarble s params = if Prelude.length params == 1
       Right a -> trace (BSU.toString a) (pure $ successPayload Nothing)
   else pure $ errorPayload
     "Incorrect arguments. Need a marble name, color, size and owner"
+
+getMarblesByRange :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
+getMarblesByRange s params = if Prelude.length params == 2
+  then do 
+    e <- getStateByRange s (params !! 0) (params !! 1)
+    case e of
+      Left  _ -> pure $ errorPayload "Failed to get marbles"
+      Right a -> trace (show a) (pure $ successPayload Nothing)
+  else pure $ errorPayload
+    "Incorrect arguments. Need a start key and an end key" 
 
 parseMarble :: [Text] -> Marble
 parseMarble params = Marble { objectType = "marble"

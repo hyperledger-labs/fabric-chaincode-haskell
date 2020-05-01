@@ -9,7 +9,7 @@ import           Network.GRPC.HighLevel.Generated
 import           Proto3.Suite
 import           Network.GRPC.HighLevel
 
-import           Peer.ChaincodeShim
+import           Peer.ChaincodeShim            as Pb
 import           Google.Protobuf.Timestamp     as Pb
 import           Peer.Proposal                 as Pb
 import           Peer.ProposalResponse         as Pb
@@ -17,6 +17,7 @@ import           Peer.ProposalResponse         as Pb
 data Error = GRPCError GRPCIOError
     | InvalidArgs
     | Error String
+    | ParseError
    deriving (Eq, Show)
 
 data ChaincodeStub = ChaincodeStub {
@@ -54,12 +55,12 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
     sendStream :: StreamSend ChaincodeMessage
 }
 
-data DefaultStateQueryIterator = DefaultStateQueryIterator {
-    channelId :: Text
-    txId :: Text
-    response :: Pb.QueryResponse
-	currentLoc :: Int
-}   
+data StateQueryIterator = StateQueryIterator {
+    sqiChannelId :: Text,
+    sqiTxId :: Text,
+    sqiResponse :: Pb.QueryResponse,
+	sqiCurrentLoc :: Int
+} deriving (Show)
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
 type MapStringBytes = Map String ByteString

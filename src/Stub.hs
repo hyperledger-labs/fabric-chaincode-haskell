@@ -3,6 +3,7 @@
 module Stub where
 
 
+import           Data.Bifunctor
 import           Data.ByteString               as BS
 import           Data.Text
 import           Data.Text.Encoding
@@ -13,6 +14,7 @@ import           Data.Vector                   as Vector
                                                 , foldr
                                                 , empty
                                                 )
+import qualified Data.ByteString.Lazy          as LBS
 
 import           Peer.ChaincodeShim
 
@@ -20,11 +22,11 @@ import           Network.GRPC.HighLevel
 import           Google.Protobuf.Timestamp     as Pb
 import           Peer.Proposal                 as Pb
 import           Proto3.Suite
+import           Proto3.Wire.Decode            
 
 import           Interfaces
 import           Messages
 import           Types
-
 
 -- NOTE: When support for concurrency transaction is added, this function will no longer be required
 -- as the stub function will block and listen for responses over a channel when the code is concurrent
@@ -66,7 +68,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
   -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
   -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
   --
-  getState :: ccs -> Text -> IO (Either Error ByteString)
+  -- getState :: ccs -> Text -> IO (Either Error ByteString)
   getState ccs key =
     let payload = getStatePayload key
         message =
@@ -78,7 +80,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
             Right _   -> pure ()
           listenForResponse (recvStream ccs)
 
-  -- -- putState :: ccs -> Text -> ByteString -> Maybe Error
+  -- putState :: ccs -> Text -> ByteString -> Maybe Error
   putState ccs key value =
     let payload = putStatePayload key value
         message =
@@ -108,16 +110,27 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
     -- -- getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
     -- getStateValiationParameter ccs key = Left notImplemented
     --
-    -- getStateByRange :: ccs -> Text -> Text -> Either Error StateQueryIterator
-    getStateByRange ccs startKey endKey = 
-      let payload = getStateByRangePayload startKey endKey
-          message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs) 
-      in do 
-        e <- (sendStream ccs) message
-        case e of
-          Left err -> error ("Error while streaming: " ++ show err)
-          Right _ -> pure ()
-        listenForResponse (recvStream ccs) 
+  -- getStateByRange :: ccs -> Text -> Text -> IO (Either Error StateQueryIterator)
+  getStateByRange ccs startKey endKey = 
+    let payload = getStateByRangePayload startKey endKey
+        message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs) 
+        bsToSqi :: ByteString -> Either Error StateQueryIterator
+        bsToSqi bs = let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError QueryResponse in
+          case eeaQueryResponse of
+            Left _ -> Left ParseError
+            Right queryResponse -> Right StateQueryIterator {
+                sqiChannelId = getChannelId ccs
+                , sqiTxId = getTxId ccs
+                , sqiResponse = queryResponse
+                , sqiCurrentLoc = 0
+              }
+    in do 
+      e <- (sendStream ccs) message
+      case e of
+        Left err -> error ("Error while streaming: " ++ show err)
+        Right _ -> pure ()
+      (bsToSqi =<<) <$> listenForResponse (recvStream ccs)
+
     --
     -- -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     -- getStateByRangeWithPagination ccs startKey endKey pageSize bookmark = Left notImplemented
@@ -191,10 +204,10 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
     -- -- setEvent :: ccs -> String -> ByteArray -> Maybe Error
     -- setEvent ccs = Right notImplemented
 
-instance StateQueryIteratorInterface DefaultStateQueryIterator where
+instance StateQueryIteratorInterface StateQueryIterator where
     -- hasNext :: sqi -> Bool
     hasNext sqi = True
     -- close :: sqi -> Maybe Error
     close _ = Nothing
     -- next :: sqi -> Either Error Pb.KV
-    next _ = Left _
+    next _ = Left $ Error "not implemented"
