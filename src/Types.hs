@@ -59,7 +59,7 @@ data StateQueryIterator = StateQueryIterator {
     sqiChannelId :: Text,
     sqiTxId :: Text,
     sqiResponse :: Pb.QueryResponse,
-	sqiCurrentLoc :: Int
+    sqiCurrentLoc :: Int
 } deriving (Show)
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
