@@ -70,9 +70,9 @@ class StateQueryIteratorInterface sqi where
 --     -- more elements in the collection key-value pairs returned by the result.
     hasNext :: sqi -> Bool
 --     -- close terminantes the iteration.
-    close :: sqi -> Maybe Error
+    close :: sqi -> IO (Maybe Error)
 --     -- Provides the next key-value pair pointed by the iterator
-    next :: sqi -> Either Error Pb.KV
+    next :: sqi -> IO (Either Error Pb.KV)
 
 -- The type class HistoryQueryIterator defines the behaviour of the types that expose functionalities
 -- for iteratogin over a set of key modifications that are associated to the history of a key.
