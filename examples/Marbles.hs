@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 -- Example invocations:
+-- peer chaincode instantiate -n mycc -v v0 -l golang -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc -o orderer:7050
 -- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble2","blue","large","Nick"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["readMarble","marble1"]}' -C myc

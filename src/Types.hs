@@ -4,6 +4,8 @@ import           Data.ByteString
 import           Data.Map
 import           Data.Vector
 import           Data.Text
+import           Data.IORef
+import           System.IO.Unsafe
 
 import           Network.GRPC.HighLevel.Generated
 import           Proto3.Suite
@@ -58,9 +60,12 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
 data StateQueryIterator = StateQueryIterator {
     sqiChannelId :: Text,
     sqiTxId :: Text,
-    sqiResponse :: Pb.QueryResponse,
-    sqiCurrentLoc :: Int
+    sqiResponse :: IORef Pb.QueryResponse,
+    sqiCurrentLoc :: IORef Int
 } deriving (Show)
+
+instance (Show a) => Show (IORef a) where
+    show a = show (unsafePerformIO (readIORef a))
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
 type MapStringBytes = Map String ByteString
