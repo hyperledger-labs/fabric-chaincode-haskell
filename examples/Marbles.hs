@@ -66,8 +66,14 @@ instance ToJSON Marble where
 instance FromJSON Marble
 
 initFunc :: DefaultChaincodeStub -> IO Pb.Response
-initFunc _ = pure $ successPayload Nothing
-
+initFunc s = 
+  let e = getFunctionAndParameters s
+  in
+    case e of
+      Left  _                              -> pure $ errorPayload ""
+      Right ("initMarble"    , parameters) -> initMarble s parameters
+      Right (fn              , _         ) -> pure
+        $ errorPayload (pack ("Invoke did not find function: " ++ unpack fn))
 
 invokeFunc :: DefaultChaincodeStub -> IO Pb.Response
 invokeFunc s =
