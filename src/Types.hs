@@ -58,6 +58,7 @@ data DefaultChaincodeStub = DefaultChaincodeStub {
 }
 
 data StateQueryIterator = StateQueryIterator {
+    sqiChaincodeStub :: DefaultChaincodeStub,
     sqiChannelId :: Text,
     sqiTxId :: Text,
     sqiResponse :: IORef Pb.QueryResponse,
@@ -66,6 +67,10 @@ data StateQueryIterator = StateQueryIterator {
 
 instance (Show a) => Show (IORef a) where
     show a = show (unsafePerformIO (readIORef a))
+
+-- TODO: Implement this properly
+instance (Show DefaultChaincodeStub) where
+    show ccs = "Chaincode stub"
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
 type MapStringBytes = Map String ByteString
