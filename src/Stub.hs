@@ -27,6 +27,7 @@ import           Data.IORef                    (readIORef, newIORef, modifyIORef
 import           Control.Monad.Except          (ExceptT(..), runExceptT)
 
 import qualified Peer.ChaincodeShim            as Pb
+import qualified Ledger.Queryresult.KvQueryResult as Pb
 
 import           Network.GRPC.HighLevel
 import           Google.Protobuf.Timestamp     as Pb
@@ -134,7 +135,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
         bsToSqi bs = let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse in
           case eeaQueryResponse of
                   -- TODO: refactor out pattern matching, e.g. using >>= or <*>
-                  Left  _             -> ExceptT $ pure $ Left ParseError
+                  Left  err             -> ExceptT $ pure $ Left $ DecodeError err
                   Right queryResponse -> ExceptT $ do
                     -- queryResponse and currentLoc are IORefs as they need to be mutated
                     -- as a part of the next() function 
@@ -156,12 +157,19 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
 
   -- TODO : implement all these interface functions
 instance StateQueryIteratorInterface StateQueryIterator where
-    -- hasNext :: sqi -> Bool
-  hasNext sqi = True
+    -- hasNext :: sqi -> IO Bool
+  hasNext sqi = do
+    queryResponse <- readIORef $ sqiResponse sqi
+    currentLoc <- readIORef $ sqiCurrentLoc sqi
+    pure $ currentLoc < Prelude.length (Pb.queryResponseResults queryResponse) || (Pb.queryResponseHasMore queryResponse)
   -- close :: sqi -> IO (Maybe Error)
   close _ = pure Nothing
   -- next :: sqi -> IO (Either Error Pb.KV)
-  next _ = pure $ Left $ Error "not implemented"
+  next sqi = do
+    eeQueryResultBytes <- nextResult sqi 
+    case eeQueryResultBytes of
+      Left _ -> pure $ Left $ Error "Error getting next queryResultBytes"
+      Right queryResultBytes -> pure $ first DecodeError (parse (decodeMessage (FieldNumber 1)) (Pb.queryResultBytesResultBytes queryResultBytes) :: Either ParseError Pb.KV)
 
 
 nextResult :: StateQueryIterator -> IO (Either Error Pb.QueryResultBytes)
@@ -200,7 +208,7 @@ fetchNextQueryResult sqi = do
                   Pb.QueryResponse
       in  case eeaQueryResponse of
             -- TODO: refactor out pattern matching, e.g. using >>= or <*>
-            Left  _             -> ExceptT $ pure $ Left ParseError
+            Left  err             -> ExceptT $ pure $ Left $ DecodeError err
             Right queryResponse -> ExceptT $ do
             -- Need to put the new queryResponse in the sqi queryResponse
               writeIORef (sqiCurrentLoc sqi) 0

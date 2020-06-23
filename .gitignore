@@ -3,3 +3,6 @@ fabric-chaincode-haskell.cabal
 *~
 dist-newstyle
 cabal.project.local
+
+.vscode
+hie.yaml

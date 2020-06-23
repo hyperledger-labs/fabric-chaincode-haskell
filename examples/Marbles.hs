@@ -19,6 +19,9 @@ import           Shim                           ( start
                                                 , ChaincodeStub(..)
                                                 , ChaincodeStubInterface(..)
                                                 , DefaultChaincodeStub
+                                                , StateQueryIterator(..)
+                                                , StateQueryIteratorInterface(..)
+                                                , Error(..)
                                                 )
 
 import           Peer.ProposalResponse         as Pb
@@ -26,7 +29,9 @@ import           Peer.ProposalResponse         as Pb
 import           Data.Text                      ( Text
                                                 , unpack
                                                 , pack
+                                                , append
                                                 )
+import qualified Data.Text.Encoding            as TSE
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
@@ -167,9 +172,18 @@ getMarblesByRange s params = if Prelude.length params == 2
     e <- getStateByRange s (params !! 0) (params !! 1)
     case e of
       Left  _ -> pure $ errorPayload "Failed to get marbles"
-      Right a -> trace (show a) (pure $ successPayload Nothing)
-  else pure $ errorPayload
-    "Incorrect arguments. Need a start key and an end key" 
+      Right sqi -> do 
+        resultBytes <- generateResultBytes sqi ""
+        trace (show resultBytes) (pure $ successPayload Nothing) 
+  else pure $ errorPayload "Incorrect arguments. Need a start key and an end key"
+
+generateResultBytes :: StateQueryIterator -> Text -> IO (Either Error BSU.ByteString)
+generateResultBytes sqi text = do 
+  hasNextBool <- hasNext sqi
+  if hasNextBool then do 
+      eeKV <- next sqi
+      generateResultBytes sqi (append text "abc")
+  else pure $ Right $ TSE.encodeUtf8 text
 
 parseMarble :: [Text] -> Marble
 parseMarble params = Marble { objectType = "marble"

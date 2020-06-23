@@ -2,13 +2,15 @@ module Types where
 
 import           Data.ByteString
 import           Data.Map
-import           Data.Vector
+import qualified Data.Vector
 import           Data.Text
 import           Data.IORef
 import           System.IO.Unsafe
 
 import           Network.GRPC.HighLevel.Generated
 import           Proto3.Suite
+import           Proto3.Wire.Decode
+
 import           Network.GRPC.HighLevel
 
 import           Peer.ChaincodeShim            as Pb
@@ -19,7 +21,7 @@ import           Peer.ProposalResponse         as Pb
 data Error = GRPCError GRPCIOError
     | InvalidArgs
     | Error String
-    | ParseError
+    | DecodeError ParseError
    deriving (Eq, Show)
 
 data ChaincodeStub = ChaincodeStub {
@@ -34,7 +36,7 @@ data ChaincodeStub = ChaincodeStub {
 -- TODO: remove all these maybes when the stub is being created properly
 data DefaultChaincodeStub = DefaultChaincodeStub {
     -- chaincode invocation arguments. serialised as arrays of bytes.
-    args :: Vector ByteString,
+    args :: Data.Vector.Vector ByteString,
     -- -- name of the function being invoked.
     -- function :: Maybe Text,
     -- -- arguments of the function idenfied by the chaincode invocation.
@@ -68,9 +70,17 @@ data StateQueryIterator = StateQueryIterator {
 instance (Show a) => Show (IORef a) where
     show a = show (unsafePerformIO (readIORef a))
 
--- TODO: Implement this properly
 instance (Show DefaultChaincodeStub) where
-    show ccs = "Chaincode stub"
+    show ccs = "Chaincode stub { "
+        ++ show (args ccs) ++ ", "
+        ++ show (txId ccs) ++ ", "
+        ++ show (channelId ccs) ++  ", "
+        ++ show (creator ccs) ++ ", "
+        ++ show (signedProposal ccs) ++ ", "
+        ++ show (proposal ccs) ++ ", "
+        ++ show (transient ccs) ++ ", "
+        ++ show (binding ccs) ++ ", "
+        ++ show (decorations ccs) ++ " }"
 
 -- MapStringBytes is a synonym for the Map type whose keys are String and values
 type MapStringBytes = Map String ByteString

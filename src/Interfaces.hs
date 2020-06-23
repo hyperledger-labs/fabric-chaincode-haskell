@@ -68,7 +68,7 @@ class ChaincodeStubInterface ccs where
 class StateQueryIteratorInterface sqi where
 --     -- hasNext provides information on current status of the iterator and whether there are
 --     -- more elements in the collection key-value pairs returned by the result.
-    hasNext :: sqi -> Bool
+    hasNext :: sqi -> IO Bool
 --     -- close terminantes the iteration.
     close :: sqi -> IO (Maybe Error)
 --     -- Provides the next key-value pair pointed by the iterator

@@ -10,6 +10,8 @@ module Shim
   , errorPayload
   , successPayload
   , ChaincodeStubInterface(..)
+  , StateQueryIterator(..)
+  , StateQueryIteratorInterface(..)
   )
 where
 
@@ -36,12 +38,15 @@ import           Peer.Proposal                 as Pb
 import           Peer.ProposalResponse         as Pb
 
 import           Stub
-import           Interfaces                     ( ChaincodeStubInterface(..) )
+import           Interfaces                     ( ChaincodeStubInterface(..)
+                                                , StateQueryIteratorInterface(..)
+                                                )
 import           Messages
 import           Types                          ( DefaultChaincodeStub(..)
                                                 , Error(..)
                                                 , ChaincodeStub(..)
                                                 , MapTextBytes
+                                                , StateQueryIterator(..)
                                                 )
 
 import           Debug.Trace
