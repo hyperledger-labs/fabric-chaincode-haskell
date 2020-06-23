@@ -188,6 +188,8 @@ generateResultBytes sqi text = do
   hasNextBool <- hasNext sqi
   if hasNextBool then do 
       eeKV <- next sqi
+      -- TODO: We need to check that the Either Error KV returned from next 
+      -- is correct and append the showable version of KVs instead of "abc".
       generateResultBytes sqi (append text "abc")
   else pure $ Right $ TSE.encodeUtf8 text
 
