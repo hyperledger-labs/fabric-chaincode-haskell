@@ -25,6 +25,7 @@ import           Shim                           ( start
                                                 )
 
 import           Peer.ProposalResponse         as Pb
+import        Ledger.Queryresult.KvQueryResult as Pb
 
 import           Data.Text                      ( Text
                                                 , unpack
@@ -35,6 +36,7 @@ import qualified Data.Text.Encoding            as TSE
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
+import qualified Data.Text.Lazy as TL
 
 import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
@@ -190,7 +192,14 @@ generateResultBytes sqi text = do
       eeKV <- next sqi
       -- TODO: We need to check that the Either Error KV returned from next 
       -- is correct and append the showable version of KVs instead of "abc".
-      generateResultBytes sqi (append text "abc")
+      case eeKV of 
+        Left e -> pure $ Left e
+        Right kv -> 
+            let 
+                makeKVString :: Pb.KV -> Text
+                makeKVString kv_ = pack "Key: " <> TL.toStrict (Pb.kvKey kv_) <> pack ", Value: " <> TSE.decodeUtf8  (kvValue kv_) 
+            in
+            generateResultBytes sqi (append text (makeKVString kv))
   else pure $ Right $ TSE.encodeUtf8 text
 
 parseMarble :: [Text] -> Marble
