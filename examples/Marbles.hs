@@ -9,6 +9,7 @@
 -- peer chaincode invoke -n mycc -c '{"Args":["deleteMarble","marble1"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["transferMarble","marble1", "Nick"]}' -C myc
 -- peer chaincode invoke -n mycc -c '{"Args":["getMarblesByRange","marble1", "marble3"]}' -C myc
+-- peer chaincode invoke -n mycc -c '{"Args":["getMarblesByRangeWithPagination","marble1", "marble3", "2", ""]}' -C myc
 
 module Marbles where
 
@@ -95,8 +96,8 @@ invokeFunc s =
       -- Right ("getHistoryForMarble", parameters) ->
       --   getHistoryForMarble s parameters
       Right ("getMarblesByRange", parameters) -> getMarblesByRange s parameters
-      -- Right ("getMarblesByRangeWithPagination", parameters) ->
-      --   getMarblesByRangeWithPagination s parameters
+      Right ("getMarblesByRangeWithPagination", parameters) ->
+        getMarblesByRangeWithPagination s parameters
       -- Right ("queryMarblesWithPagination", parameters) ->
       --   queryMarblesWithPagination s parameters
       Right (fn              , _         ) -> pure
@@ -184,6 +185,15 @@ getMarblesByRange s params = if Prelude.length params == 2
         resultBytes <- generateResultBytes sqi ""
         trace (show resultBytes) (pure $ successPayload Nothing) 
   else pure $ errorPayload "Incorrect arguments. Need a start key and an end key"
+
+getMarblesByRangeWithPagination :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
+getMarblesByRangeWithPagination s params = if Prelude.length params == 4
+  then do 
+    e <- getStateByRangeWithPagination s (params !! 0) (params !! 1) (read (unpack $ params !! 2) :: Int) (params !! 3)
+    case e of
+      Left  _ -> pure $ errorPayload "Failed to get marbles"
+      Right _ -> pure $ successPayload $ Just "The payload"
+  else pure $ errorPayload "Incorrect arguments. Need start key, end key, pageSize and bookmark"
 
 generateResultBytes :: StateQueryIterator -> Text -> IO (Either Error BSU.ByteString)
 generateResultBytes sqi text = do 
