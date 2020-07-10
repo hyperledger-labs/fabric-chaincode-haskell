@@ -19,6 +19,9 @@ import           Shim                           ( start
                                                 , ChaincodeStub(..)
                                                 , ChaincodeStubInterface(..)
                                                 , DefaultChaincodeStub
+                                                , StateQueryIterator(..)
+                                                , StateQueryIteratorInterface(..)
+                                                , Error(..)
                                                 )
 
 import           Peer.ProposalResponse         as Pb
@@ -26,7 +29,9 @@ import           Peer.ProposalResponse         as Pb
 import           Data.Text                      ( Text
                                                 , unpack
                                                 , pack
+                                                , append
                                                 )
+import qualified Data.Text.Encoding            as TSE
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
@@ -61,8 +66,14 @@ instance ToJSON Marble where
 instance FromJSON Marble
 
 initFunc :: DefaultChaincodeStub -> IO Pb.Response
-initFunc _ = pure $ successPayload Nothing
-
+initFunc s = 
+  let e = getFunctionAndParameters s
+  in
+    case e of
+      Left  _                              -> pure $ errorPayload ""
+      Right ("initMarble"    , parameters) -> initMarble s parameters
+      Right (fn              , _         ) -> pure
+        $ errorPayload (pack ("Invoke did not find function: " ++ unpack fn))
 
 invokeFunc :: DefaultChaincodeStub -> IO Pb.Response
 invokeFunc s =
@@ -167,9 +178,20 @@ getMarblesByRange s params = if Prelude.length params == 2
     e <- getStateByRange s (params !! 0) (params !! 1)
     case e of
       Left  _ -> pure $ errorPayload "Failed to get marbles"
-      Right a -> trace (show a) (pure $ successPayload Nothing)
-  else pure $ errorPayload
-    "Incorrect arguments. Need a start key and an end key" 
+      Right sqi -> do 
+        resultBytes <- generateResultBytes sqi ""
+        trace (show resultBytes) (pure $ successPayload Nothing) 
+  else pure $ errorPayload "Incorrect arguments. Need a start key and an end key"
+
+generateResultBytes :: StateQueryIterator -> Text -> IO (Either Error BSU.ByteString)
+generateResultBytes sqi text = do 
+  hasNextBool <- hasNext sqi
+  if hasNextBool then do 
+      eeKV <- next sqi
+      -- TODO: We need to check that the Either Error KV returned from next 
+      -- is correct and append the showable version of KVs instead of "abc".
+      generateResultBytes sqi (append text "abc")
+  else pure $ Right $ TSE.encodeUtf8 text
 
 parseMarble :: [Text] -> Marble
 parseMarble params = Marble { objectType = "marble"

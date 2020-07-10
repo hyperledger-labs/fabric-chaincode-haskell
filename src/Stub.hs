@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Stub where
 
@@ -6,7 +7,13 @@ module Stub where
 import           Data.Bifunctor
 import           Data.ByteString               as BS
 import           Data.Text
+import           Data.Text.Lazy                as TL
 import           Data.Text.Encoding
+import           Data.IORef                     ( readIORef
+                                                , newIORef
+                                                , modifyIORef
+                                                , writeIORef
+                                                )
 import           Data.Vector                   as Vector
                                                 ( Vector
                                                 , length
@@ -20,12 +27,13 @@ import           Data.IORef                    (readIORef, newIORef, modifyIORef
 import           Control.Monad.Except          (ExceptT(..), runExceptT)
 
 import qualified Peer.ChaincodeShim            as Pb
+import qualified Ledger.Queryresult.KvQueryResult as Pb
 
 import           Network.GRPC.HighLevel
 import           Google.Protobuf.Timestamp     as Pb
 import           Peer.Proposal                 as Pb
 import           Proto3.Suite
-import           Proto3.Wire.Decode            
+import           Proto3.Wire.Decode
 
 import           Interfaces
 import           Messages
@@ -116,7 +124,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
 
   -- TODO: Implement better error handling/checks etc
   -- getStateByRange :: ccs -> Text -> Text -> IO (Either Error StateQueryIterator)
-  getStateByRange ccs startKey endKey = 
+  getStateByRange ccs startKey endKey =
     let payload = getStateByRangePayload startKey endKey
         message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs) 
         -- We have listenForResponse a :: IO (Either Error ByteString)
@@ -126,33 +134,43 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
         bsToSqi :: ByteString -> ExceptT Error IO StateQueryIterator
         bsToSqi bs = let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse in
           case eeaQueryResponse of
-            Left _ -> ExceptT $ pure $ Left ParseError
-            Right queryResponse -> ExceptT $ do
-              -- queryResponse and currentLoc are IORefs as they need to be mutated
-              -- as a part of the next() function
-              queryResponseIORef <- newIORef queryResponse
-              currentLocIORef <- newIORef 0
-              pure $ Right StateQueryIterator {
-              sqiChannelId = getChannelId ccs
-              , sqiTxId = getTxId ccs
-              , sqiResponse = queryResponseIORef
-              , sqiCurrentLoc = currentLocIORef
-            }
-    in do 
-      e <- (sendStream ccs) message
-      case e of
-        Left err -> error ("Error while streaming: " ++ show err)
-        Right _ -> pure ()
-      runExceptT $ ExceptT (listenForResponse (recvStream ccs)) >>= bsToSqi
+                  -- TODO: refactor out pattern matching, e.g. using >>= or <*>
+                  Left  err             -> ExceptT $ pure $ Left $ DecodeError err
+                  Right queryResponse -> ExceptT $ do
+                    -- queryResponse and currentLoc are IORefs as they need to be mutated
+                    -- as a part of the next() function 
+                    queryResponseIORef <- newIORef queryResponse
+                    currentLocIORef    <- newIORef 0
+                    pure $ Right StateQueryIterator
+                      { sqiChaincodeStub = ccs 
+                      , sqiChannelId     = getChannelId ccs
+                      , sqiTxId          = getTxId ccs
+                      , sqiResponse      = queryResponseIORef
+                      , sqiCurrentLoc    = currentLocIORef
+                      }
+    in  do
+          e <- (sendStream ccs) message
+          case e of
+            Left  err -> error ("Error while streaming: " ++ show err)
+            Right _   -> pure ()
+          runExceptT $ ExceptT (listenForResponse (recvStream ccs)) >>= bsToSqi
 
--- TODO : implement all these interface functions
+  -- TODO : implement all these interface functions
 instance StateQueryIteratorInterface StateQueryIterator where
-  -- hasNext :: sqi -> Bool
-  hasNext sqi = True
+    -- hasNext :: sqi -> IO Bool
+  hasNext sqi = do
+    queryResponse <- readIORef $ sqiResponse sqi
+    currentLoc <- readIORef $ sqiCurrentLoc sqi
+    pure $ currentLoc < Prelude.length (Pb.queryResponseResults queryResponse) || (Pb.queryResponseHasMore queryResponse)
   -- close :: sqi -> IO (Maybe Error)
   close _ = pure Nothing
   -- next :: sqi -> IO (Either Error Pb.KV)
-  next _ = pure $ Left $ Error "not implemented"
+  next sqi = do
+    eeQueryResultBytes <- nextResult sqi 
+    case eeQueryResultBytes of
+      Left _ -> pure $ Left $ Error "Error getting next queryResultBytes"
+      Right queryResultBytes -> pure $ first DecodeError (parse (decodeMessage (FieldNumber 1)) (Pb.queryResultBytesResultBytes queryResultBytes) :: Either ParseError Pb.KV)
+
 
 nextResult :: StateQueryIterator -> IO (Either Error Pb.QueryResultBytes)
 nextResult sqi = do
@@ -171,12 +189,37 @@ nextResult sqi = do
           queryResult
   else pure $ Left $ Error "Invalid iterator state"
 
--- TODO : this function is only called when the local result list has been
+
+-- This function is only called when the local result list has been 
 -- iterated through and there are more results to get from the peer
--- It makes a call to get the next QueryResponse back from the peer
--- and mutates the response with the new QueryResponse and set currentLoc back to 0
+-- It makes a call to get the next QueryResponse back from the peer 
+-- and mutates the sqi with the new QueryResponse and sets currentLoc back to 0
 fetchNextQueryResult :: StateQueryIterator -> IO (Either Error StateQueryIterator)
-fetchNextQueryResult sqi =  pure $ Left $ Error "not yet implemented"
+fetchNextQueryResult sqi = do
+  queryResponse <- readIORef $ sqiResponse sqi
+  let 
+    payload = queryNextStatePayload $ TL.toStrict $ Pb.queryResponseId queryResponse 
+    message = buildChaincodeMessage QUERY_STATE_NEXT payload (sqiTxId sqi) (sqiChannelId sqi)
+    bsToQueryResponse :: ByteString -> ExceptT Error IO StateQueryIterator
+    bsToQueryResponse bs =
+      let eeaQueryResponse =
+              parse (decodeMessage (FieldNumber 1)) bs :: Either
+                  ParseError
+                  Pb.QueryResponse
+      in  case eeaQueryResponse of
+            -- TODO: refactor out pattern matching, e.g. using >>= or <*>
+            Left  err             -> ExceptT $ pure $ Left $ DecodeError err
+            Right queryResponse -> ExceptT $ do
+            -- Need to put the new queryResponse in the sqi queryResponse
+              writeIORef (sqiCurrentLoc sqi) 0
+              writeIORef (sqiResponse sqi) queryResponse
+              pure $ Right sqi
+    in do 
+      e <- (sendStream $ sqiChaincodeStub sqi) message
+      case e of
+          Left  err -> error ("Error while streaming: " ++ show err)
+          Right _   -> pure ()
+      runExceptT $ ExceptT (listenForResponse (recvStream $ sqiChaincodeStub sqi)) >>= bsToQueryResponse
     
     --
     -- -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)

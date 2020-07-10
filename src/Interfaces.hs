@@ -37,7 +37,10 @@ class ChaincodeStubInterface ccs where
     -- setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
     -- getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
     getStateByRange :: ccs -> Text -> Text -> IO (Either Error StateQueryIterator)
+    
+    -- TODO: We need to implement this so we can test the fetchNextQueryResult functionality
     -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+    
     -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
     -- getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     -- createCompositeKey :: ccs -> String -> [String] -> Either Error String
@@ -68,10 +71,12 @@ class ChaincodeStubInterface ccs where
 class StateQueryIteratorInterface sqi where
 --     -- hasNext provides information on current status of the iterator and whether there are
 --     -- more elements in the collection key-value pairs returned by the result.
-    hasNext :: sqi -> Bool
+    hasNext :: sqi -> IO Bool
 --     -- close terminantes the iteration.
     close :: sqi -> IO (Maybe Error)
 --     -- Provides the next key-value pair pointed by the iterator
+--     TODO: Change this to an ExceptT type to make handling the next function
+--     easier on the user chaincode side
     next :: sqi -> IO (Either Error Pb.KV)
 
 -- The type class HistoryQueryIterator defines the behaviour of the types that expose functionalities
