@@ -3,7 +3,7 @@
 
 module Stub where
 
-
+-- import           Data.Int                      (fromIntegral)
 import           Data.Bifunctor
 import           Data.ByteString               as BS
 import           Data.Text
@@ -23,7 +23,6 @@ import           Data.Vector                   as Vector
                                                 , (!)
                                                 )
 import qualified Data.ByteString.Lazy          as LBS
-import           Data.IORef                    (readIORef, newIORef, modifyIORef)
 import           Control.Monad.Except          (ExceptT(..), runExceptT)
 
 import qualified Peer.ChaincodeShim            as Pb
@@ -39,6 +38,7 @@ import           Interfaces
 import           Messages
 import           Types
 
+import           Debug.Trace
 -- NOTE: When support for concurrency transaction is added, this function will no longer be required
 -- as the stub function will block and listen for responses over a channel when the code is concurrent
 listenForResponse :: StreamRecv Pb.ChaincodeMessage -> IO (Either Error ByteString)
@@ -125,38 +125,31 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
   -- TODO: Implement better error handling/checks etc
   -- getStateByRange :: ccs -> Text -> Text -> IO (Either Error StateQueryIterator)
   getStateByRange ccs startKey endKey =
-    let payload = getStateByRangePayload startKey endKey
-        message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs) 
-        -- ExceptT is a monad transformer that allows us to compose these by binding over IO Either
-        bsToSqi :: ByteString -> ExceptT Error IO StateQueryIterator
-        bsToSqi bs = 
-            let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse
-            in
-                case eeaQueryResponse of
-                        -- TODO: refactor out pattern matching, e.g. using >>= or <*>
-                        Left  err             -> ExceptT $ pure $ Left $ DecodeError err
-                        Right queryResponse -> ExceptT $ do
-                            -- queryResponse and currentLoc are IORefs as they need to be mutated
-                            -- as a part of the next() function 
-                            queryResponseIORef <- newIORef queryResponse
-                            currentLocIORef    <- newIORef 0
-                            pure $ Right StateQueryIterator { 
-                            sqiChaincodeStub = ccs 
-                            , sqiChannelId     = getChannelId ccs
-                            , sqiTxId          = getTxId ccs
-                            , sqiResponse      = queryResponseIORef
-                            , sqiCurrentLoc    = currentLocIORef
-                            }
+    let payload = getStateByRangePayload startKey endKey Nothing
+        message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs)
     in do
           e <- (sendStream ccs) message
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
             Right _   -> pure ()
-          runExceptT $ ExceptT (listenForResponse (recvStream ccs)) >>= bsToSqi
+          runExceptT $ ExceptT (listenForResponse (recvStream ccs)) >>= (bsToSqi ccs)
 
   -- TODO: We need to implement this so we can test the fetchNextQueryResult functionality
-  -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
-  getStateByRangeWithPagination ccs startKey endKey pageSize bookmark = pure $ Left $ Error "Not implemented"
+    -- getStateByRangeWithPagination :: ccs -> Text -> Text -> Int -> Text -> IO (Either Error (StateQueryIterator, Pb.QueryResponseMetadata))
+  getStateByRangeWithPagination ccs startKey endKey pageSize bookmark = 
+    let metadata = Pb.QueryMetadata {
+        Pb.queryMetadataPageSize = fromIntegral pageSize
+        , Pb.queryMetadataBookmark = TL.fromStrict bookmark
+      }
+        payload = (trace "Building getStateByRangeWithPagination payload") getStateByRangePayload startKey endKey $ Just metadata
+        message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs)
+    in do
+          e <- (sendStream ccs) message
+          case e of
+            Left  err -> error ("Error while streaming: " ++ show err)
+            Right _   -> pure ()
+          runExceptT $ ExceptT (listenForResponse (recvStream ccs)) >>= (bsToSqiAndMeta ccs)
+
 
   -- TODO : implement all these interface functions
 instance StateQueryIteratorInterface StateQueryIterator where
@@ -164,8 +157,9 @@ instance StateQueryIteratorInterface StateQueryIterator where
     -- hasNext :: sqi -> IO Bool
   hasNext sqi = do
     queryResponse <- readIORef $ sqiResponse sqi
-    currentLoc <- readIORef $ sqiCurrentLoc sqi
-    pure $ currentLoc < Prelude.length (Pb.queryResponseResults queryResponse) || (Pb.queryResponseHasMore queryResponse)
+    currentLoc <- (trace $ "Query response: " ++ show queryResponse) readIORef $ sqiCurrentLoc sqi
+    pure $ (currentLoc < Prelude.length (Pb.queryResponseResults queryResponse)) 
+      || (Pb.queryResponseHasMore queryResponse)
   -- close :: sqi -> IO (Maybe Error)
   close _ = pure Nothing
   -- next :: sqi -> IO (Either Error Pb.KV)
@@ -175,6 +169,53 @@ instance StateQueryIteratorInterface StateQueryIterator where
       Left _ -> pure $ Left $ Error "Error getting next queryResultBytes"
       Right queryResultBytes -> pure $ first DecodeError (parse (decodeMessage (FieldNumber 1)) (Pb.queryResultBytesResultBytes queryResultBytes) :: Either ParseError Pb.KV)
 
+
+-- ExceptT is a monad transformer that allows us to compose these by binding over IO Either
+bsToSqi :: DefaultChaincodeStub -> ByteString -> ExceptT Error IO StateQueryIterator
+bsToSqi ccs bs = 
+    let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse
+    in
+        case eeaQueryResponse of
+                -- TODO: refactor out pattern matching, e.g. using >>= or <*>
+                Left  err             -> ExceptT $ pure $ Left $ DecodeError err
+                Right queryResponse -> ExceptT $ do
+                        -- queryResponse and currentLoc are IORefs as they need to be mutated
+                        -- as a part of the next() function 
+                        queryResponseIORef <- newIORef queryResponse
+                        currentLocIORef    <- newIORef 0
+                        pure $ Right StateQueryIterator { 
+                        sqiChaincodeStub = ccs 
+                        , sqiChannelId     = getChannelId ccs
+                        , sqiTxId          = getTxId ccs
+                        , sqiResponse      = queryResponseIORef
+                        , sqiCurrentLoc    = currentLocIORef
+                        }
+
+-- ExceptT is a monad transformer that allows us to compose these by binding over IO Either
+bsToSqiAndMeta :: DefaultChaincodeStub -> ByteString -> ExceptT Error IO (StateQueryIterator, Pb.QueryResponseMetadata)
+bsToSqiAndMeta ccs bs = 
+    let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse
+    in
+        case eeaQueryResponse of
+                -- TODO: refactor out pattern matching, e.g. using >>= or <*>
+                Left  err             -> ExceptT $ pure $ Left $ DecodeError err
+                Right queryResponse -> 
+                  let eeMetadata = parse (decodeMessage (FieldNumber 1)) (Pb.queryResponseMetadata queryResponse) :: Either ParseError Pb.QueryResponseMetadata
+                  in
+                    case eeMetadata of
+                      Left err -> ExceptT $ pure $ Left $ DecodeError err
+                      Right metadata -> (trace $ "Metadata from bsToSqiAndMeta: " ++ show metadata) ExceptT $ do
+                        -- queryResponse and currentLoc are IORefs as they need to be mutated
+                        -- as a part of the next() function 
+                        queryResponseIORef <- newIORef queryResponse
+                        currentLocIORef    <- newIORef 0
+                        pure $ Right (StateQueryIterator { 
+                        sqiChaincodeStub = ccs 
+                        , sqiChannelId     = getChannelId ccs
+                        , sqiTxId          = getTxId ccs
+                        , sqiResponse      = queryResponseIORef
+                        , sqiCurrentLoc    = currentLocIORef
+                        }, metadata)
 
 nextResult :: StateQueryIterator -> IO (Either Error Pb.QueryResultBytes)
 nextResult sqi = do
@@ -187,10 +228,10 @@ nextResult sqi = do
         modifyIORef (sqiCurrentLoc sqi) (+ 1)
         if ((currentLoc + 1) == Prelude.length (Pb.queryResponseResults $ queryResponse)) then
           do
-            fetchNextQueryResult sqi
+            (trace "Fetching next query result from the peer") fetchNextQueryResult sqi
             queryResult
         else
-          queryResult
+          (trace "Returning local query result") queryResult
   else pure $ Left $ Error "Invalid iterator state"
 
 

@@ -32,6 +32,7 @@ peer chaincode invoke -n mycc -c '{"Args":["readMarble","marble1"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["deleteMarble","marble1"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["transferMarble","marble1", "Nick"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["getMarblesByRange","marble1", "marble3"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["getMarblesByRangeWithPagination","marble1", "marble3", "1", ""]}' -C myc
 ```
 
 ## Fabcar Chaincode
