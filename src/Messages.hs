@@ -20,7 +20,7 @@ import           Peer.Chaincode                as Pb
 import           Peer.ProposalResponse         as Pb
 
 
-data CCMessageType = GET_STATE | PUT_STATE | DEL_STATE | REGISTER | COMPLETED | GET_STATE_BY_RANGE
+data CCMessageType = GET_STATE | PUT_STATE | DEL_STATE | REGISTER | COMPLETED | GET_STATE_BY_RANGE | QUERY_STATE_NEXT
 
 regMessage :: ChaincodeMessage
 regMessage = buildChaincodeMessage REGISTER regPayload "" ""
@@ -74,6 +74,10 @@ getStateByRangePayload startKey endKey = Pb.GetStateByRange {
     , getStateByRangeMetadata = BSU.fromString ""
 }
 
+queryNextStatePayload :: Text -> Pb.QueryStateNext
+queryNextStatePayload id =
+  Pb.QueryStateNext { queryStateNextId = fromStrict id }
+
 -- buildChaincodeMessage
 --   :: Enumerated Pb.ChaincodeMessage_Type
 --   -> a
@@ -84,8 +88,8 @@ buildChaincodeMessage mesType payload txid chanID = ChaincodeMessage
   { chaincodeMessageType           = getCCMessageType mesType
   , chaincodeMessageTimestamp      = Nothing
   , chaincodeMessagePayload        = LBS.toStrict
-    $ Wire.toLazyByteString
-    $ encodeMessage (FieldNumber 1) payload
+                                     $ Wire.toLazyByteString
+                                     $ encodeMessage (FieldNumber 1) payload
   , chaincodeMessageTxid           = fromStrict txid
   , chaincodeMessageProposal       = Nothing
   , chaincodeMessageChaincodeEvent = Nothing
@@ -101,3 +105,4 @@ getCCMessageType ccMessageType = case ccMessageType of
   COMPLETED -> Enumerated $ Right ChaincodeMessage_TypeCOMPLETED
   GET_STATE_BY_RANGE ->
     Enumerated $ Right ChaincodeMessage_TypeGET_STATE_BY_RANGE
+  QUERY_STATE_NEXT -> Enumerated $ Right ChaincodeMessage_TypeQUERY_STATE_NEXT

@@ -1,14 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
--- Example invocations:
--- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble2","blue","large","Nick"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["readMarble","marble1"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["deleteMarble","marble1"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["transferMarble","marble1", "Nick"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["getMarblesByRange","marble1", "marble3"]}' -C myc
-
 module Marbles where
 
 import           GHC.Generics
@@ -18,17 +10,24 @@ import           Shim                           ( start
                                                 , ChaincodeStub(..)
                                                 , ChaincodeStubInterface(..)
                                                 , DefaultChaincodeStub
+                                                , StateQueryIterator(..)
+                                                , StateQueryIteratorInterface(..)
+                                                , Error(..)
                                                 )
 
 import           Peer.ProposalResponse         as Pb
+import        Ledger.Queryresult.KvQueryResult as Pb
 
 import           Data.Text                      ( Text
                                                 , unpack
                                                 , pack
+                                                , append
                                                 )
+import qualified Data.Text.Encoding            as TSE
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
+import qualified Data.Text.Lazy as TL
 
 import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
@@ -38,6 +37,7 @@ import           Data.Aeson                     ( ToJSON
                                                 , encode
                                                 , decode
                                                 )
+
 import           Debug.Trace
 
 main :: IO ()
@@ -60,8 +60,14 @@ instance ToJSON Marble where
 instance FromJSON Marble
 
 initFunc :: DefaultChaincodeStub -> IO Pb.Response
-initFunc _ = pure $ successPayload Nothing
-
+initFunc s = 
+  let e = getFunctionAndParameters s
+  in
+    case e of
+      Left  _                              -> pure $ errorPayload ""
+      Right ("initMarble"    , parameters) -> initMarble s parameters
+      Right (fn              , _         ) -> pure
+        $ errorPayload (pack ("Invoke did not find function: " ++ unpack fn))
 
 invokeFunc :: DefaultChaincodeStub -> IO Pb.Response
 invokeFunc s =
@@ -81,8 +87,8 @@ invokeFunc s =
       -- Right ("getHistoryForMarble", parameters) ->
       --   getHistoryForMarble s parameters
       Right ("getMarblesByRange", parameters) -> getMarblesByRange s parameters
-      -- Right ("getMarblesByRangeWithPagination", parameters) ->
-      --   getMarblesByRangeWithPagination s parameters
+      Right ("getMarblesByRangeWithPagination", parameters) ->
+        getMarblesByRangeWithPagination s parameters
       -- Right ("queryMarblesWithPagination", parameters) ->
       --   queryMarblesWithPagination s parameters
       Right (fn              , _         ) -> pure
@@ -166,9 +172,36 @@ getMarblesByRange s params = if Prelude.length params == 2
     e <- getStateByRange s (params !! 0) (params !! 1)
     case e of
       Left  _ -> pure $ errorPayload "Failed to get marbles"
-      Right a -> trace (show a) (pure $ successPayload Nothing)
-  else pure $ errorPayload
-    "Incorrect arguments. Need a start key and an end key" 
+      Right sqi -> do 
+        resultBytes <- generateResultBytes sqi ""
+        trace (show resultBytes) (pure $ successPayload Nothing) 
+  else pure $ errorPayload "Incorrect arguments. Need a start key and an end key"
+
+getMarblesByRangeWithPagination :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
+getMarblesByRangeWithPagination s params = if Prelude.length params == 4
+  then do 
+    e <- getStateByRangeWithPagination s (params !! 0) (params !! 1) (read (unpack $ params !! 2) :: Int) (params !! 3)
+    case e of
+      Left  _ -> pure $ errorPayload "Failed to get marbles"
+      Right _ -> pure $ successPayload $ Just "The payload"
+  else pure $ errorPayload "Incorrect arguments. Need start key, end key, pageSize and bookmark"
+
+generateResultBytes :: StateQueryIterator -> Text -> IO (Either Error BSU.ByteString)
+generateResultBytes sqi text = do 
+  hasNextBool <- hasNext sqi
+  if hasNextBool then do 
+      eeKV <- next sqi
+      -- TODO: We need to check that the Either Error KV returned from next 
+      -- is correct and append the showable version of KVs instead of "abc".
+      case eeKV of 
+        Left e -> pure $ Left e
+        Right kv -> 
+            let 
+                makeKVString :: Pb.KV -> Text
+                makeKVString kv_ = pack "Key: " <> TL.toStrict (Pb.kvKey kv_) <> pack ", Value: " <> TSE.decodeUtf8  (kvValue kv_) 
+            in
+            generateResultBytes sqi (append text (makeKVString kv))
+  else pure $ Right $ TSE.encodeUtf8 text
 
 parseMarble :: [Text] -> Marble
 parseMarble params = Marble { objectType = "marble"

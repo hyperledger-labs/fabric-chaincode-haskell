@@ -28,6 +28,7 @@ dependencies:
   - containers
   - utf8-string
   - aeson
+  - mtl
 
 library:
   source-dirs:
