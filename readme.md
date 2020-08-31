@@ -35,13 +35,16 @@ Note: Since running chaincode in production mode depends on a language specific 
 
 ### Running the Haskell chaincode
 
-The Haskell chaincode process can be started with:
+There are three example chaincodes that have been implemented. Please see the
+readme in the `examples` directory for information on how to run each of them. 
+
+The instructions for running for the `sacc` example are described below.
+
+Start the Haskell chaincode process with:
 
 ```
 stack run sacc-exe
 ```
-
-To run the `sacc` example. Look at `package.yaml` to see available executables.
 
 When the Fabric peer is running (see below), the Haskell process that is started does a number of things
 
@@ -71,7 +74,6 @@ peer chaincode instantiate -n mycc -v v0 -l golang -c '{"Args":["init","a","100"
 ```
 
 The chaincode can then be invoked with the following examples:
-
 ```
 peer chaincode invoke -n mycc -c '{"Args":["get","a"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["put","b","60"]}' -C myc
@@ -83,7 +85,7 @@ peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 
 - [x] Finish implementing shim functions and clean up shim module exports
 - [x] Add examples directory
-- [ ] Write unit tests for stub functions
 - [ ] Add support for concurrent transactions
 - [ ] Finish implementing all stub functions
 - [ ] Publish to Hackage
+- [ ] Add traces throughout the chaincode examples

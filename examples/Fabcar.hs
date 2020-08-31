@@ -1,11 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
--- peer chaincode invoke -n mycc -c '{"Args":["initLedger"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["createCar", "CAR10", "Ford", "Falcon", "White", "Al"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["queryCar", "CAR10"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["changeCarOwner", "CAR10", "Nick"]}' -C myc
-
 module Fabcar where
 
 import           GHC.Generics

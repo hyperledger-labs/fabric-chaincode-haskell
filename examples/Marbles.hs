@@ -1,15 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
--- Example invocations:
--- peer chaincode instantiate -n mycc -v v0 -l golang -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc -o orderer:7050
--- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble1","red","large","Al"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["initMarble","marble2","blue","large","Nick"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["readMarble","marble1"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["deleteMarble","marble1"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["transferMarble","marble1", "Nick"]}' -C myc
--- peer chaincode invoke -n mycc -c '{"Args":["getMarblesByRange","marble1", "marble3"]}' -C myc
-
 module Marbles where
 
 import           GHC.Generics
@@ -44,6 +35,7 @@ import           Data.Aeson                     ( ToJSON
                                                 , encode
                                                 , decode
                                                 )
+
 import           Debug.Trace
 
 main :: IO ()
@@ -190,7 +182,9 @@ generateResultBytes sqi text = do
       eeKV <- next sqi
       -- TODO: We need to check that the Either Error KV returned from next 
       -- is correct and append the showable version of KVs instead of "abc".
-      generateResultBytes sqi (append text "abc")
+      case eeKV of
+        Right kv -> generateResultBytes sqi (append text $ pack $ show kv)
+        Left e -> pure $ Left e
   else pure $ Right $ TSE.encodeUtf8 text
 
 parseMarble :: [Text] -> Marble
