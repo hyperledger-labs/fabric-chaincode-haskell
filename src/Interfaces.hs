@@ -14,6 +14,7 @@ import qualified Google.Protobuf.Timestamp     as GooglePb
 import qualified Peer.Proposal                 as Pb
 import qualified Peer.ProposalResponse         as Pb
 import qualified Peer.Chaincode                as Pb
+import qualified Peer.ChaincodeShim            as Pb
 
 
 import           Types
@@ -37,9 +38,7 @@ class ChaincodeStubInterface ccs where
     -- setStateValidationParameter :: ccs -> String -> [ByteString] -> Maybe Error
     -- getStateValiationParameter :: ccs -> String -> Either Error [ByteString]
     getStateByRange :: ccs -> Text -> Text -> IO (Either Error StateQueryIterator)
-    
-    -- TODO: We need to implement this so we can test the fetchNextQueryResult functionality
-    -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+    getStateByRangeWithPagination :: ccs -> Text -> Text -> Int -> Text -> IO (Either Error (StateQueryIterator, Pb.QueryResponseMetadata))
     
     -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
     -- getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)

@@ -16,6 +16,7 @@ import           Shim                           ( start
                                                 )
 
 import           Peer.ProposalResponse         as Pb
+import        Ledger.Queryresult.KvQueryResult as Pb
 
 import           Data.Text                      ( Text
                                                 , unpack
@@ -26,6 +27,7 @@ import qualified Data.Text.Encoding            as TSE
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.UTF8          as BSU
 import qualified Data.ByteString.Lazy          as LBS
+import qualified Data.Text.Lazy as TL
 
 import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
@@ -85,8 +87,8 @@ invokeFunc s =
       -- Right ("getHistoryForMarble", parameters) ->
       --   getHistoryForMarble s parameters
       Right ("getMarblesByRange", parameters) -> getMarblesByRange s parameters
-      -- Right ("getMarblesByRangeWithPagination", parameters) ->
-      --   getMarblesByRangeWithPagination s parameters
+      Right ("getMarblesByRangeWithPagination", parameters) ->
+        getMarblesByRangeWithPagination s parameters
       -- Right ("queryMarblesWithPagination", parameters) ->
       --   queryMarblesWithPagination s parameters
       Right (fn              , _         ) -> pure
@@ -175,6 +177,15 @@ getMarblesByRange s params = if Prelude.length params == 2
         trace (show resultBytes) (pure $ successPayload Nothing) 
   else pure $ errorPayload "Incorrect arguments. Need a start key and an end key"
 
+getMarblesByRangeWithPagination :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
+getMarblesByRangeWithPagination s params = if Prelude.length params == 4
+  then do 
+    e <- getStateByRangeWithPagination s (params !! 0) (params !! 1) (read (unpack $ params !! 2) :: Int) (params !! 3)
+    case e of
+      Left  _ -> pure $ errorPayload "Failed to get marbles"
+      Right _ -> pure $ successPayload $ Just "The payload"
+  else pure $ errorPayload "Incorrect arguments. Need start key, end key, pageSize and bookmark"
+
 generateResultBytes :: StateQueryIterator -> Text -> IO (Either Error BSU.ByteString)
 generateResultBytes sqi text = do 
   hasNextBool <- hasNext sqi
@@ -182,9 +193,14 @@ generateResultBytes sqi text = do
       eeKV <- next sqi
       -- TODO: We need to check that the Either Error KV returned from next 
       -- is correct and append the showable version of KVs instead of "abc".
-      case eeKV of
-        Right kv -> generateResultBytes sqi (append text $ pack $ show kv)
+      case eeKV of 
         Left e -> pure $ Left e
+        Right kv -> 
+            let 
+                makeKVString :: Pb.KV -> Text
+                makeKVString kv_ = pack "Key: " <> TL.toStrict (Pb.kvKey kv_) <> pack ", Value: " <> TSE.decodeUtf8  (kvValue kv_) 
+            in
+            generateResultBytes sqi (append text (makeKVString kv))
   else pure $ Right $ TSE.encodeUtf8 text
 
 parseMarble :: [Text] -> Marble

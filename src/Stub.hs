@@ -127,33 +127,36 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
   getStateByRange ccs startKey endKey =
     let payload = getStateByRangePayload startKey endKey
         message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs) 
-        -- We have listenForResponse a :: IO (Either Error ByteString)
-        -- and the function bsToSqi :: ByteString -> IO (Either Error StateQueryIterator)
-        -- And want IO (Either Error StateQueryIterator)
         -- ExceptT is a monad transformer that allows us to compose these by binding over IO Either
         bsToSqi :: ByteString -> ExceptT Error IO StateQueryIterator
-        bsToSqi bs = let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse in
-          case eeaQueryResponse of
-                  -- TODO: refactor out pattern matching, e.g. using >>= or <*>
-                  Left  err             -> ExceptT $ pure $ Left $ DecodeError err
-                  Right queryResponse -> ExceptT $ do
-                    -- queryResponse and currentLoc are IORefs as they need to be mutated
-                    -- as a part of the next() function 
-                    queryResponseIORef <- newIORef queryResponse
-                    currentLocIORef    <- newIORef 0
-                    pure $ Right StateQueryIterator
-                      { sqiChaincodeStub = ccs 
-                      , sqiChannelId     = getChannelId ccs
-                      , sqiTxId          = getTxId ccs
-                      , sqiResponse      = queryResponseIORef
-                      , sqiCurrentLoc    = currentLocIORef
-                      }
-    in  do
+        bsToSqi bs = 
+            let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse
+            in
+                case eeaQueryResponse of
+                        -- TODO: refactor out pattern matching, e.g. using >>= or <*>
+                        Left  err             -> ExceptT $ pure $ Left $ DecodeError err
+                        Right queryResponse -> ExceptT $ do
+                            -- queryResponse and currentLoc are IORefs as they need to be mutated
+                            -- as a part of the next() function 
+                            queryResponseIORef <- newIORef queryResponse
+                            currentLocIORef    <- newIORef 0
+                            pure $ Right StateQueryIterator { 
+                            sqiChaincodeStub = ccs 
+                            , sqiChannelId     = getChannelId ccs
+                            , sqiTxId          = getTxId ccs
+                            , sqiResponse      = queryResponseIORef
+                            , sqiCurrentLoc    = currentLocIORef
+                            }
+    in do
           e <- (sendStream ccs) message
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
             Right _   -> pure ()
           runExceptT $ ExceptT (listenForResponse (recvStream ccs)) >>= bsToSqi
+
+  -- TODO: We need to implement this so we can test the fetchNextQueryResult functionality
+  -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+  getStateByRangeWithPagination ccs startKey endKey pageSize bookmark = pure $ Left $ Error "Not implemented"
 
   -- TODO : implement all these interface functions
 instance StateQueryIteratorInterface StateQueryIterator where
@@ -222,75 +225,73 @@ fetchNextQueryResult sqi = do
           Right _   -> pure ()
       runExceptT $ ExceptT (listenForResponse (recvStream $ sqiChaincodeStub sqi)) >>= bsToQueryResponse
     
-    --
-    -- -- getStateByRangeWithPagination :: ccs -> String -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
-    -- getStateByRangeWithPagination ccs startKey endKey pageSize bookmark = Left notImplemented
-    --
-    -- -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
-    -- getStateByPartialCompositeKey ccs objectType keys  = Left notImplemented
-    --
-    -- --getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
-    -- getStateByPartialCompositeKeyWithPagination ccs objectType keys pageSize bookmark = Left notImplemented
-    --
-    -- --createCompositeKey :: ccs -> String -> [String] -> Either Error String
-    -- createCompositeKey ccs objectType keys = Left notImplemented
-    --
-    -- --splitCompositeKey :: ccs -> String -> Either Error (String, [String])
-    -- splitCompositeKey ccs key = Left notImplemented
-    --
-    -- --getQueryResult :: ccs -> String -> Either Error StateQueryIterator
-    -- getQueryResult ccs query = Left notImplemented
-    --
-    -- --getQueryResultWithPagination :: ccs -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
-    -- getQueryResultWithPagination ccs key pageSize bookmark = Left notImplemented
-    --
-    -- --getHistoryForKey :: ccs -> String -> Either Error HistoryQueryIterator
-    -- getHistoryForKey ccs key = Left notImplemented
-    --
-    -- --getPrivateData :: ccs -> String -> String -> Either Error ByteString
-    -- getPrivateData ccs collection key = Left notImplemented
-    --
-    -- --getPrivateDataHash :: ccs -> String -> String -> Either Error ByteString
-    -- getPrivateDataHash ccs collection key = Left notImplemented
-    --
-    -- --putPrivateData :: ccs -> String -> String -> ByteString -> Maybe Error
-    -- putPrivateData ccs collection string value = Right notImplemented
-    --
-    -- --delPrivateData :: ccs -> String -> String -> Maybe Error
-    -- delPrivateData ccs collection key = Right notImplemented
-    --
-    -- --setPrivateDataValidationParameter :: ccs -> String -> String -> ByteArray -> Maybe Error
-    -- setPrivateDataValidationParameter ccs collection key params = Right notImplemented
-    --
-    -- --getPrivateDataValidationParameter :: ccs -> String -> String -> Either Error ByteString
-    -- getPrivateDataValidationParameter ccs collection key = Left notImplemented
-    --
-    -- --getPrivateDataByRange :: ccs -> String -> String -> String -> Either Error StateQueryIterator
-    -- getPrivateDataByRange ccs collection startKey endKey = Left notImplemented
-    --
-    -- --getPrivateDataByPartialCompositeKey :: ccs -> String -> String -> [String] -> Either Error StateQueryIterator
-    -- getPrivateDataByPartialCompositeKey ccs collection objectType keys = Left notImplemented
-    --
-    -- -- getPrivateDataQueryResult :: ccs -> String -> String -> Either Error StateQueryIterator
-    -- getPrivateDataQueryResult ccs collection query  = Left notImplemented
-    --
-    -- -- getCreator :: ccs -> Either Error ByteArray
-    -- getCreator ccs = Right creator
-    --
-    -- -- getTransient :: ccs -> Either Error MapStringBytes
-    -- getTransient ccs = Right transient
-    --
-    -- -- getBinding :: ccs -> Either Error MapStringBytes
-    -- getBinding ccs = Right binding
-    --
-    -- -- getDecorations :: ccs -> MapStringBytes
-    -- getDecorations ccs = Right decorations
-    --
-    -- -- getSignedProposal :: ccs -> Either Error Pb.SignedProposal
-    -- getSignedProposal ccs = Right signedProposal
-    --
-    -- -- getTxTimestamp :: ccs -> Either Error Pb.Timestamp
-    -- getTxTimestamp ccs = Right txTimestamp
-    --
-    -- -- setEvent :: ccs -> String -> ByteArray -> Maybe Error
-    -- setEvent ccs = Right notImplemented
+    
+--
+-- -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
+-- getStateByPartialCompositeKey ccs objectType keys  = Left notImplemented
+--
+-- --getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+-- getStateByPartialCompositeKeyWithPagination ccs objectType keys pageSize bookmark = Left notImplemented
+--
+-- --createCompositeKey :: ccs -> String -> [String] -> Either Error String
+-- createCompositeKey ccs objectType keys = Left notImplemented
+--
+-- --splitCompositeKey :: ccs -> String -> Either Error (String, [String])
+-- splitCompositeKey ccs key = Left notImplemented
+--
+-- --getQueryResult :: ccs -> String -> Either Error StateQueryIterator
+-- getQueryResult ccs query = Left notImplemented
+--
+-- --getQueryResultWithPagination :: ccs -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+-- getQueryResultWithPagination ccs key pageSize bookmark = Left notImplemented
+--
+-- --getHistoryForKey :: ccs -> String -> Either Error HistoryQueryIterator
+-- getHistoryForKey ccs key = Left notImplemented
+--
+-- --getPrivateData :: ccs -> String -> String -> Either Error ByteString
+-- getPrivateData ccs collection key = Left notImplemented
+--
+-- --getPrivateDataHash :: ccs -> String -> String -> Either Error ByteString
+-- getPrivateDataHash ccs collection key = Left notImplemented
+--
+-- --putPrivateData :: ccs -> String -> String -> ByteString -> Maybe Error
+-- putPrivateData ccs collection string value = Right notImplemented
+--
+-- --delPrivateData :: ccs -> String -> String -> Maybe Error
+-- delPrivateData ccs collection key = Right notImplemented
+--
+-- --setPrivateDataValidationParameter :: ccs -> String -> String -> ByteArray -> Maybe Error
+-- setPrivateDataValidationParameter ccs collection key params = Right notImplemented
+--
+-- --getPrivateDataValidationParameter :: ccs -> String -> String -> Either Error ByteString
+-- getPrivateDataValidationParameter ccs collection key = Left notImplemented
+--
+-- --getPrivateDataByRange :: ccs -> String -> String -> String -> Either Error StateQueryIterator
+-- getPrivateDataByRange ccs collection startKey endKey = Left notImplemented
+--
+-- --getPrivateDataByPartialCompositeKey :: ccs -> String -> String -> [String] -> Either Error StateQueryIterator
+-- getPrivateDataByPartialCompositeKey ccs collection objectType keys = Left notImplemented
+--
+-- -- getPrivateDataQueryResult :: ccs -> String -> String -> Either Error StateQueryIterator
+-- getPrivateDataQueryResult ccs collection query  = Left notImplemented
+--
+-- -- getCreator :: ccs -> Either Error ByteArray
+-- getCreator ccs = Right creator
+--
+-- -- getTransient :: ccs -> Either Error MapStringBytes
+-- getTransient ccs = Right transient
+--
+-- -- getBinding :: ccs -> Either Error MapStringBytes
+-- getBinding ccs = Right binding
+--
+-- -- getDecorations :: ccs -> MapStringBytes
+-- getDecorations ccs = Right decorations
+--
+-- -- getSignedProposal :: ccs -> Either Error Pb.SignedProposal
+-- getSignedProposal ccs = Right signedProposal
+--
+-- -- getTxTimestamp :: ccs -> Either Error Pb.Timestamp
+-- getTxTimestamp ccs = Right txTimestamp
+--
+-- -- setEvent :: ccs -> String -> ByteArray -> Maybe Error
+-- setEvent ccs = Right notImplemented
