@@ -16,6 +16,7 @@ import           Shim                           ( start
                                                 )
 
 import           Peer.ProposalResponse         as Pb
+import           Peer.ChaincodeShim            as Pb
 import        Ledger.Queryresult.KvQueryResult as Pb
 
 import           Data.Text                      ( Text
@@ -177,22 +178,23 @@ getMarblesByRange s params = if Prelude.length params == 2
         trace (show resultBytes) (pure $ successPayload Nothing) 
   else pure $ errorPayload "Incorrect arguments. Need a start key and an end key"
 
+-- TODO: include retrieval of next set of results using the returned bookmark (next TODO)
 getMarblesByRangeWithPagination :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
 getMarblesByRangeWithPagination s params = if Prelude.length params == 4
   then do 
     e <- getStateByRangeWithPagination s (params !! 0) (params !! 1) (read (unpack $ params !! 2) :: Int) (params !! 3)
     case e of
       Left  _ -> pure $ errorPayload "Failed to get marbles"
-      Right _ -> pure $ successPayload $ Just "The payload"
+      Right (sqi, metadata) -> do
+        resultBytes <- generateResultBytesForPagination (sqi, metadata) ""
+        trace (show resultBytes) (pure $ successPayload Nothing) 
   else pure $ errorPayload "Incorrect arguments. Need start key, end key, pageSize and bookmark"
 
 generateResultBytes :: StateQueryIterator -> Text -> IO (Either Error BSU.ByteString)
 generateResultBytes sqi text = do 
   hasNextBool <- hasNext sqi
-  if hasNextBool then do 
+  if (trace $ "hasNext in generateResultBytes: " ++ show hasNextBool) hasNextBool then do 
       eeKV <- next sqi
-      -- TODO: We need to check that the Either Error KV returned from next 
-      -- is correct and append the showable version of KVs instead of "abc".
       case eeKV of 
         Left e -> pure $ Left e
         Right kv -> 
@@ -201,6 +203,21 @@ generateResultBytes sqi text = do
                 makeKVString kv_ = pack "Key: " <> TL.toStrict (Pb.kvKey kv_) <> pack ", Value: " <> TSE.decodeUtf8  (kvValue kv_) 
             in
             generateResultBytes sqi (append text (makeKVString kv))
+  else pure $ Right $ TSE.encodeUtf8 text
+
+generateResultBytesForPagination:: (StateQueryIterator, Pb.QueryResponseMetadata) -> Text -> IO (Either Error BSU.ByteString)
+generateResultBytesForPagination (sqi, md) text = do 
+  hasNextBool <- hasNext sqi
+  if (trace $ "hasNext in generateResultBytesForPagination: " ++ show hasNextBool) hasNextBool then do 
+      eeKV <- next sqi
+      case eeKV of 
+        Left e -> pure $ Left e
+        Right kv -> 
+            let 
+                makeKVString :: Pb.KV -> Text
+                makeKVString kv_ = pack "Key: " <> TL.toStrict (Pb.kvKey kv_) <> pack ", Value: " <> TSE.decodeUtf8  (kvValue kv_) 
+            in
+            generateResultBytesForPagination (sqi, md) (append text (makeKVString kv))
   else pure $ Right $ TSE.encodeUtf8 text
 
 parseMarble :: [Text] -> Marble

@@ -66,12 +66,16 @@ delStatePayload :: Text -> Pb.DelState
 delStatePayload key =
   Pb.DelState {delStateKey = fromStrict key, delStateCollection = ""}
 
-getStateByRangePayload :: Text -> Text -> Pb.GetStateByRange
-getStateByRangePayload startKey endKey = Pb.GetStateByRange {
+getStateByRangePayload :: Text -> Text -> Maybe Pb.QueryMetadata -> Pb.GetStateByRange
+getStateByRangePayload startKey endKey metaData = Pb.GetStateByRange {
     getStateByRangeStartKey = fromStrict startKey
     , getStateByRangeEndKey = fromStrict endKey
     , getStateByRangeCollection = ""
-    , getStateByRangeMetadata = BSU.fromString ""
+    , getStateByRangeMetadata = case metaData of 
+    -- This is an example of how to encode a Pb type into a bytestring
+    -- https://hackage.haskell.org/package/proto3-wire-1.2.0/docs/Proto3-Wire-Tutorial.html
+      Just metaData -> LBS.toStrict $ Wire.toLazyByteString $ encodeMessage (FieldNumber 1) metaData
+      Nothing -> BSU.fromString ""
 }
 
 queryNextStatePayload :: Text -> Pb.QueryStateNext

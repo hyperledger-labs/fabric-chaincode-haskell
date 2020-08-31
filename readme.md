@@ -88,4 +88,4 @@ peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 - [ ] Add support for concurrent transactions
 - [ ] Finish implementing all stub functions
 - [ ] Publish to Hackage
-- [ ] Add traces throughout the chaincode examples
+- [ ] Improve logging
