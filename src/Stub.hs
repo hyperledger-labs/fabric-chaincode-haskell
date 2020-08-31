@@ -160,6 +160,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
 
   -- TODO : implement all these interface functions
 instance StateQueryIteratorInterface StateQueryIterator where
+-- TODO: remove the IO from this function (possibly with the State monad)
     -- hasNext :: sqi -> IO Bool
   hasNext sqi = do
     queryResponse <- readIORef $ sqiResponse sqi
