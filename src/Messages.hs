@@ -74,6 +74,7 @@ getStateByRangePayload startKey endKey metaData = Pb.GetStateByRange {
     , getStateByRangeMetadata = case metaData of 
     -- This is an example of how to encode a Pb type into a bytestring
     -- https://hackage.haskell.org/package/proto3-wire-1.2.0/docs/Proto3-Wire-Tutorial.html
+    -- TODO: Use Suite.toLazyByteString
       Just metaData -> LBS.toStrict $ Wire.toLazyByteString $ encodeMessage (FieldNumber 1) metaData
       Nothing -> BSU.fromString ""
 }
@@ -91,6 +92,7 @@ queryNextStatePayload id =
 buildChaincodeMessage mesType payload txid chanID = ChaincodeMessage
   { chaincodeMessageType           = getCCMessageType mesType
   , chaincodeMessageTimestamp      = Nothing
+    -- TODO: Use Suite.toLazyByteString
   , chaincodeMessagePayload        = LBS.toStrict
                                      $ Wire.toLazyByteString
                                      $ encodeMessage (FieldNumber 1) payload

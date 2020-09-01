@@ -25,7 +25,8 @@ import           Data.Vector                   as Vector
 import qualified Data.ByteString.Lazy          as LBS
 import           Control.Monad.Except          (ExceptT(..), runExceptT)
 
-import qualified Peer.ChaincodeShim            as Pb
+import qualified Common.Common                    as Pb
+import qualified Peer.ChaincodeShim               as Pb
 import qualified Ledger.Queryresult.KvQueryResult as Pb
 
 import           Network.GRPC.HighLevel
@@ -37,6 +38,7 @@ import           Proto3.Wire.Decode
 import           Interfaces
 import           Messages
 import           Types
+import           Helper
 
 import           Debug.Trace
 -- NOTE: When support for concurrency transaction is added, this function will no longer be required
@@ -71,11 +73,36 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
   getArgsSlice ccs = Right $ Vector.foldr BS.append BS.empty $ getArgs ccs
 
   -- getTxId :: css -> String
-  getTxId css = txId css
+  getTxId = txId
 
   -- getChannelId :: ccs -> String
-  getChannelId ccs = channelId ccs
+  getChannelId = channelId
 
+  -- getSignedProposal :: ccs -> Maybe Pb.SignedProposal
+  getSignedProposal = signedProposal
+
+  -- getCreator :: ccs -> Maybe ByteString
+  getCreator = creator
+
+  -- getTransient :: ccs -> Maybe MapTextBytes
+  getTransient = transient
+
+  -- getDecorations :: ccs -> MapTextBytes
+  getDecorations = decorations
+
+  -- getBinding :: ccs -> Maybe MapTextBytes
+  getBinding = binding
+
+  -- getTxTimestamp :: ccs -> Either Error Pb.Timestamp
+  getTxTimestamp ccs = case (proposal ccs) of
+    Just prop -> do
+      header <- getHeader $ prop
+      channelHeader <- getChannelHeader header
+      case (Pb.channelHeaderTimestamp channelHeader) of
+        Nothing -> Left $ Error "ChannelHeader doesn't have a timestamp"
+        Just timestamp -> Right timestamp
+    Nothing -> Left $ Error "Chaincode stub doesn't has a proposal to get the timestamp from"
+  
   -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
   -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
   --
@@ -167,12 +194,14 @@ instance StateQueryIteratorInterface StateQueryIterator where
     eeQueryResultBytes <- nextResult sqi 
     case eeQueryResultBytes of
       Left _ -> pure $ Left $ Error "Error getting next queryResultBytes"
+      -- TODO: use Suite.fromByteString
       Right queryResultBytes -> pure $ first DecodeError (parse (decodeMessage (FieldNumber 1)) (Pb.queryResultBytesResultBytes queryResultBytes) :: Either ParseError Pb.KV)
 
 
 -- ExceptT is a monad transformer that allows us to compose these by binding over IO Either
 bsToSqi :: DefaultChaincodeStub -> ByteString -> ExceptT Error IO StateQueryIterator
 bsToSqi ccs bs = 
+      -- TODO: use Suite.fromByteString
     let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse
     in
         case eeaQueryResponse of
@@ -194,12 +223,14 @@ bsToSqi ccs bs =
 -- ExceptT is a monad transformer that allows us to compose these by binding over IO Either
 bsToSqiAndMeta :: DefaultChaincodeStub -> ByteString -> ExceptT Error IO (StateQueryIterator, Pb.QueryResponseMetadata)
 bsToSqiAndMeta ccs bs = 
+      -- TODO: use Suite.fromByteString
     let eeaQueryResponse = parse (decodeMessage (FieldNumber 1)) bs :: Either ParseError Pb.QueryResponse
     in
         case eeaQueryResponse of
                 -- TODO: refactor out pattern matching, e.g. using >>= or <*>
                 Left  err             -> ExceptT $ pure $ Left $ DecodeError err
                 Right queryResponse -> 
+                      -- TODO: use Suite.fromByteString
                   let eeMetadata = parse (decodeMessage (FieldNumber 1)) (Pb.queryResponseMetadata queryResponse) :: Either ParseError Pb.QueryResponseMetadata
                   in
                     case eeMetadata of
@@ -248,6 +279,7 @@ fetchNextQueryResult sqi = do
     bsToQueryResponse :: ByteString -> ExceptT Error IO StateQueryIterator
     bsToQueryResponse bs =
       let eeaQueryResponse =
+      -- TODO: Suite.fromByteString
               parse (decodeMessage (FieldNumber 1)) bs :: Either
                   ParseError
                   Pb.QueryResponse
@@ -315,24 +347,6 @@ fetchNextQueryResult sqi = do
 --
 -- -- getPrivateDataQueryResult :: ccs -> String -> String -> Either Error StateQueryIterator
 -- getPrivateDataQueryResult ccs collection query  = Left notImplemented
---
--- -- getCreator :: ccs -> Either Error ByteArray
--- getCreator ccs = Right creator
---
--- -- getTransient :: ccs -> Either Error MapStringBytes
--- getTransient ccs = Right transient
---
--- -- getBinding :: ccs -> Either Error MapStringBytes
--- getBinding ccs = Right binding
---
--- -- getDecorations :: ccs -> MapStringBytes
--- getDecorations ccs = Right decorations
---
--- -- getSignedProposal :: ccs -> Either Error Pb.SignedProposal
--- getSignedProposal ccs = Right signedProposal
---
--- -- getTxTimestamp :: ccs -> Either Error Pb.Timestamp
--- getTxTimestamp ccs = Right txTimestamp
 --
 -- -- setEvent :: ccs -> String -> ByteArray -> Maybe Error
 -- setEvent ccs = Right notImplemented
