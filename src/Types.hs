@@ -3,6 +3,7 @@ module Types where
 import           Data.ByteString
 import           Data.Map
 import qualified Data.Vector
+import qualified Data.Text.Lazy                as TL
 import           Data.Text
 import           Data.IORef
 import           System.IO.Unsafe
@@ -37,10 +38,6 @@ data ChaincodeStub = ChaincodeStub {
 data DefaultChaincodeStub = DefaultChaincodeStub {
     -- chaincode invocation arguments. serialised as arrays of bytes.
     args :: Data.Vector.Vector ByteString,
-    -- -- name of the function being invoked.
-    -- function :: Maybe Text,
-    -- -- arguments of the function idenfied by the chaincode invocation.
-    -- parameters :: Maybe [String],
     -- transaction identifier.
     txId :: Text,
     -- channel identifier
@@ -82,8 +79,5 @@ instance (Show DefaultChaincodeStub) where
         ++ show (binding ccs) ++ ", "
         ++ show (decorations ccs) ++ " }"
 
--- MapStringBytes is a synonym for the Map type whose keys are String and values
-type MapStringBytes = Map String ByteString
-
 -- MapTextBytes is a synonym for the Map type whose keys are Text and values
-type MapTextBytes = Map Text ByteString
+type MapTextBytes = Map TL.Text ByteString

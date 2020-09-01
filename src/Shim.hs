@@ -14,7 +14,7 @@ module Shim
   , StateQueryIteratorInterface(..)
   )
 where
-
+import           Data.Bifunctor                ( first )
 import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.ByteString.Char8         as BC
 import           Data.Map                       ( mapKeys )
@@ -28,10 +28,8 @@ import           Network.GRPC.HighLevel.Generated
 import           Network.GRPC.HighLevel
 import qualified Network.GRPC.LowLevel.Client  as Client
 import           Proto3.Suite                  as Suite
-import           Proto3.Wire.Encode            as Wire
-import           Proto3.Wire.Decode            as Wire
-import           Proto3.Wire
 
+import           Common.Common                 as Pb
 import           Peer.ChaincodeShim            as Pb
 import           Peer.Chaincode                as Pb
 import           Peer.Proposal                 as Pb
@@ -48,6 +46,7 @@ import           Types                          ( DefaultChaincodeStub(..)
                                                 , MapTextBytes
                                                 , StateQueryIterator(..)
                                                 )
+import          Helper
 
 import           Debug.Trace
 
@@ -166,70 +165,44 @@ newChaincodeStub
   -> StreamRecv ChaincodeMessage
   -> StreamSend ChaincodeMessage
   -> Either Error DefaultChaincodeStub
-newChaincodeStub mes recv send =
-  let eErrInput = getChaincodeInput mes
-  in
-    case eErrInput of
-      Left err -> Left $ error (show err)
-      Right Pb.ChaincodeInput { chaincodeInputArgs = args, chaincodeInputDecorations = decorations }
-        -> let maybeSignedProposal = chaincodeMessageProposal mes
-           in  case maybeSignedProposal of
-                --  If the SignedProposal is empty, populate the stub with just the
-                -- args, txId, channelId, decorations, send and recv
-                 Nothing -> Right $ DefaultChaincodeStub
-                   args
-                   (toStrict $ chaincodeMessageTxid mes)
-                   (toStrict $ chaincodeMessageChannelId mes)
-                   Nothing
-                   Nothing
-                   Nothing
-                   Nothing
-                   Nothing
-                   (mapKeys toStrict decorations)
-                   recv
-                   send
-                  --  If SignedProposal is not empty, get the proposal from it
-                  -- and the creator, transient and binding from the proposal
-                 Just signedProposal ->
-                   let eErrProposal = getProposal signedProposal
-                   in  case eErrProposal of
-                         Left  err      -> Left $ error (show err)
-                         Right proposal -> Right $ DefaultChaincodeStub
-                           args
-                           (toStrict $ chaincodeMessageTxid mes)
-                           (toStrict $ chaincodeMessageChannelId mes)
-                           (getCreator proposal)
-                           (Just signedProposal)
-                           (Just proposal)
-                           (getTransient proposal)
-                           (getBinding proposal)
-                           (mapKeys toStrict decorations)
-                           recv
-                           send
-
-
--- These are some helper functions to process the unmarshalling of different types
--- from the chaincode message in order to populate the stub
-getChaincodeInput :: ChaincodeMessage -> Either ParseError Pb.ChaincodeInput
-getChaincodeInput mes = Suite.fromByteString (chaincodeMessagePayload mes)
-
-getProposal :: Pb.SignedProposal -> Either ParseError Pb.Proposal
-getProposal signedProposal =
-  Suite.fromByteString (signedProposalProposalBytes signedProposal)
-
--- -- TODO: Get SignatureHeader and implement getCreator
--- -- and then get creator from the header.
-getCreator :: Pb.Proposal -> Maybe BC.ByteString
-getCreator _ = Nothing
-
-getTransient :: Pb.Proposal -> Maybe MapTextBytes
-getTransient proposal =
-  let eErrPayload = Suite.fromByteString (proposalPayload proposal)
-  in  case eErrPayload of
-        Left _ -> Nothing
-        Right payload ->
-          Just (mapKeys toStrict $ chaincodeProposalPayloadTransientMap payload)
-
--- -- TODO: Get ChannelHeader and SignatureHeader and implement getBinding
-getBinding :: Pb.Proposal -> Maybe MapTextBytes
-getBinding _ = Nothing
+newChaincodeStub mes recv send = do
+  input <- getChaincodeInput mes
+  let maybeSignedProposal = chaincodeMessageProposal mes
+      in  case maybeSignedProposal of
+          --  If the SignedProposal is empty, populate the stub with just the
+          -- args, txId, channelId, decorations, send and recv
+            Nothing -> Right $ DefaultChaincodeStub{
+                          args = chaincodeInputArgs input
+                          , txId = toStrict $ chaincodeMessageTxid mes
+                          , channelId = toStrict $ chaincodeMessageChannelId mes
+                          , creator = Nothing
+                          , signedProposal = Nothing 
+                          , proposal = Nothing
+                          , transient = Nothing
+                          , binding = Nothing
+                          , decorations = chaincodeInputDecorations input
+                          , recvStream = recv
+                          , sendStream = send
+                    }
+            --  If SignedProposal is not empty, get the proposal from it
+            -- and the creator, transient and binding from the proposal
+            Just signedProposal -> do
+              proposal <- getProposal signedProposal
+              header <- getHeader proposal
+              chaincodeProposalPayload <- getChaincodeProposalPayload proposal
+              channelHeader <- getChannelHeader header
+              signatureHeader <- getSignatureHeader header
+              Right $ DefaultChaincodeStub{
+                          args = chaincodeInputArgs input
+                          , txId = toStrict $ chaincodeMessageTxid mes
+                          , channelId = toStrict $ chaincodeMessageChannelId mes
+                          , creator = Just $ signatureHeaderCreator signatureHeader
+                          , signedProposal = Just signedProposal
+                          , proposal = Just proposal
+                          , transient = Just $ chaincodeProposalPayloadTransientMap chaincodeProposalPayload
+                          , binding = createBinding proposal
+                          , decorations = chaincodeInputDecorations input
+                          , recvStream = recv
+                          , sendStream = send
+                    }
+                           

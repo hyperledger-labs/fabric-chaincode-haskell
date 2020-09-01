@@ -30,7 +30,13 @@ class ChaincodeStubInterface ccs where
     getArgsSlice :: ccs -> Either Error ByteString
     getTxId :: ccs -> Text
     getChannelId :: ccs -> Text
-    -- invokeChaincode :: ccs -> String -> [ByteArray] -> String -> Pb.Response
+    getSignedProposal :: ccs -> Maybe Pb.SignedProposal
+    getCreator :: ccs -> Maybe ByteString
+    getTransient :: ccs -> Maybe MapTextBytes
+    getDecorations :: ccs -> MapTextBytes
+    getBinding :: ccs -> Maybe MapTextBytes
+    getTxTimestamp :: ccs -> Either Error GooglePb.Timestamp
+
     getState :: ccs -> Text -> IO (Either Error ByteString)
     putState :: ccs -> Text -> ByteString -> IO (Either Error ByteString)
     delState :: ccs -> Text -> IO (Either Error ByteString)
@@ -56,12 +62,6 @@ class ChaincodeStubInterface ccs where
     -- getPrivateDataByRange :: ccs -> String -> String -> String -> Either Error StateQueryIterator
     -- getPrivateDataByPartialCompositeKey :: ccs -> String -> String -> [String] -> Either Error StateQueryIterator
     -- getPrivateDataQueryResult :: ccs -> String -> String -> Either Error StateQueryIterator
-    -- getCreator :: ccs -> Either Error ByteString
-    -- getTransient :: ccs -> Either Error MapStringBytes
-    -- getBinding :: ccs -> Either Error MapStringBytes
-    -- getDecorations :: ccs -> MapStringBytes
-    -- getSignedProposal :: ccs -> Either Error Pb.SignedProposal
-    -- getTxTimestamp :: ccs -> Either Error GooglePb.Timestamp
     -- setEvent :: ccs -> String -> ByteArray -> Maybe Error
 
 
