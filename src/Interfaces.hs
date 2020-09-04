@@ -1,20 +1,21 @@
 module Interfaces
-  ( ChaincodeStubInterface (..),
-    StateQueryIteratorInterface (..),
-  )
+    ( ChaincodeStubInterface(..)
+    , StateQueryIteratorInterface(..)
+    )
 where
 
-import Control.Monad.Except (ExceptT (..))
-import Data.ByteString
-import Data.Text
-import Data.Vector
-import qualified Google.Protobuf.Timestamp as GooglePb
-import qualified Ledger.Queryresult.KvQueryResult as Pb
-import qualified Peer.Chaincode as Pb
-import qualified Peer.ChaincodeShim as Pb
-import qualified Peer.Proposal as Pb
-import qualified Peer.ProposalResponse as Pb
-import Types
+import           Control.Monad.Except           ( ExceptT(..) )
+import           Data.ByteString
+import           Data.Text
+import           Data.Vector
+import qualified Google.Protobuf.Timestamp     as GooglePb
+import qualified Ledger.Queryresult.KvQueryResult
+                                               as Pb
+import qualified Peer.Chaincode                as Pb
+import qualified Peer.ChaincodeShim            as Pb
+import qualified Peer.Proposal                 as Pb
+import qualified Peer.ProposalResponse         as Pb
+import           Types
 
 -- The ChaincodeStub type class defines the behaviour of the stub that is exposed to
 -- the the Chaincode types to interact with the ledger.

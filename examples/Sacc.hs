@@ -15,7 +15,7 @@ import           Peer.ProposalResponse         as Pb
 
 import           Data.Text                      ( Text )
 import           Data.Text.Encoding             ( encodeUtf8 )
-import           Data.ByteString.UTF8          as BSU
+import Data.ByteString.UTF8 as BSU ( ByteString, toString )
 import           Debug.Trace
 
 main :: IO ()
