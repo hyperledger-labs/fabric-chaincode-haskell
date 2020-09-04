@@ -85,6 +85,7 @@ biDiRequestFn chaincodeStub _call _mmap recv send _done = do
   chatWithPeer recv send chaincodeStub
 
 -- main loop listening for messages from the peer
+chatWithPeer :: IO (Either GRPCIOError (Maybe ChaincodeMessage)) -> StreamSend ChaincodeMessage -> ChaincodeStub -> IO b
 chatWithPeer recv send chaincodeStub = do
   res <- recv
   case res of
