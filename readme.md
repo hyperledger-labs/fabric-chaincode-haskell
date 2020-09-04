@@ -1,14 +1,19 @@
 # fabric-chaincode-haskell
 
-NOTE: This project is currently a PRE-ALPHA and is NOT suitable for production use.
+NOTE: This project is currently a PRE-ALPHA and is NOT suitable for production
+use.
 
-`fabric-chaincode-haskell` is a Haskell shim for Hyperledger Fabric to allow the authoring of smart contracts in Haskell.
+`fabric-chaincode-haskell` is a Haskell shim for Hyperledger Fabric to allow the
+authoring of smart contracts in Haskell.
 
 The project has three main parts:
 
-- `protos` and `google-protos/google/protobuf` - The source protobuf files that define the communication between the shim and the peer. The corresponding Haskell files are generated in `protos-hs`
+- `protos` and `google-protos/google/protobuf` - The source protobuf files that
+  define the communication between the shim and the peer. The corresponding
+  Haskell files are generated in `protos-hs`
 - `src` - Contains the Shim
-- `examples` - Contains the main executable which is an example usage of the shim
+- `examples` - Contains the main executable which is an example usage of the
+  shim
 
 ## Installation
 
@@ -18,7 +23,8 @@ To build the project, run the following from the root directory:
 stack build
 ```
 
-Note : It is possible that you might get a build error with `grpc-haskell-core`, like the following:
+Note : It is possible that you might get a build error with `grpc-haskell-core`,
+like the following:
 
 ```
 Missing dependencies on foreign libraries:
@@ -26,17 +32,20 @@ Missing dependencies on foreign libraries:
 - Missing (or bad) C libraries: grpc, gpr
 ```
 
-This is because the underlying C binaries are either not installed or are not installed correctly.
-To fix this, try reinstalling the grpc binary with `brew install grpc`/`brew reinstall grpc`.
+This is because the underlying C binaries are either not installed or are not
+installed correctly. To fix this, try reinstalling the grpc binary with `brew install grpc`/`brew reinstall grpc`.
 
 ## Usage
 
-Note: Since running chaincode in production mode depends on a language specific flag (e.g. `-l golang`, `-l java` or `-l node`), it is currently only possible to run Haskell chaincode in dev mode. Supporting Haskell chaincode in production mode will require some minor changes to be made to the peer source code.
+Note: Since running chaincode in production mode depends on a language specific
+flag (e.g. `-l golang`, `-l java` or `-l node`), it is currently only possible
+to run Haskell chaincode in dev mode. Supporting Haskell chaincode in production
+mode will require some minor changes to be made to the peer source code.
 
 ### Running the Haskell chaincode
 
 There are three example chaincodes that have been implemented. Please see the
-readme in the `examples` directory for information on how to run each of them. 
+readme in the `examples` directory for information on how to run each of them.
 
 The instructions for running for the `sacc` example are described below.
 
@@ -46,7 +55,8 @@ Start the Haskell chaincode process with:
 stack run sacc-exe
 ```
 
-When the Fabric peer is running (see below), the Haskell process that is started does a number of things
+When the Fabric peer is running (see below), the Haskell process that is started
+does a number of things
 
 1. It connects to the Fabric peer through gRPC
 2. It sends a REGISTER message to the peer and receives a REGISTERED response
@@ -56,15 +66,16 @@ When the Fabric peer is running (see below), the Haskell process that is started
 
 ### Connecting to the Fabric peer
 
-The Haskell shim can be used with any Fabric network with a peer running in development mode.
-However, we have provided a very simple [Fabric network](https://github.com/airvin/fabric-network) for testing purposes.
-If you would like to use this network, start the Fabric network with the peer in development mode and without a chaincode container.
-This can be done with the `./start-no-cc.sh` script.
-The peer needs to be told about the chaincode process running with the `install` and `instantiate` commands.
+The Haskell shim can be used with any Fabric network with a peer running in
+development mode. However, we have provided a very simple [Fabric
+network](https://github.com/airvin/fabric-network) for testing purposes. If you
+would like to use this network, start the Fabric network with the peer in
+development mode and without a chaincode container. This can be done with the
+`./start-no-cc.sh` script. The peer needs to be told about the chaincode process
+running with the `install` and `instantiate` commands.
 
-Open a second terminal tab for the fabric network.
-In the first tab, run `docker logs peer -f` to keep tabs on the logs for the peer container.
-In the second tab, run the following:
+Open a second terminal tab for the fabric network. In the first tab, run `docker logs peer -f` to keep tabs on the logs for the peer container. In the second
+tab, run the following:
 
 ```
 docker exec -it cli bash
@@ -74,12 +85,21 @@ peer chaincode instantiate -n mycc -v v0 -l golang -c '{"Args":["init","a","100"
 ```
 
 The chaincode can then be invoked with the following examples:
+
 ```
 peer chaincode invoke -n mycc -c '{"Args":["get","a"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["put","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["set","b","60"]}' -C myc
 peer chaincode invoke -n mycc -c '{"Args":["del","a"]}' -C myc
 ```
+
+## Development notes
+
+The formatter used in this project is
+[floskell](https://github.com/ennocramer/floskell). Ensure your Haskell
+formatter is set to floskell and it will use the `floskell.json` configuration
+at the root of the project. We have found the best LSP to use is
+[haskell-language-server](https://github.com/haskell/haskell-language-server).
 
 ## TODO
 
