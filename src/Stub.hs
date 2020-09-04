@@ -102,39 +102,34 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
         Nothing -> Left $ Error "ChannelHeader doesn't have a timestamp"
         Just timestamp -> Right timestamp
     Nothing -> Left $ Error "Chaincode stub doesn't has a proposal to get the timestamp from"
-  
-  -- invokeChaincode :: ccs -> String -> [ByteString] -> String -> Pb.Response
-  -- invokeChaincode ccs cc params = Pb.Response{ responseStatus = 500, responseMessage = message(notImplemented), responsePayload = Nothing }
-  --
-  -- getState :: ccs -> Text -> IO (Either Error ByteString)
+
+  -- getState :: ccs -> Text ->  ExceptT Error IO ByteString
   getState ccs key =
     let payload = getStatePayload key
         message =
             buildChaincodeMessage GET_STATE payload (txId ccs) (channelId ccs)
-    in  do
+    in ExceptT $ do
           e <- (sendStream ccs) message
           case e of
-            Left  err -> error ("Error while streaming: " ++ show err)
-            Right _   -> pure ()
-          listenForResponse (recvStream ccs)
+            Left  err -> pure $ Left $ Error $ "Error while streaming: " ++ show err
+            Right _   -> listenForResponse (recvStream ccs)
 
-  -- putState :: ccs -> Text -> ByteString -> Maybe Error
+  -- putState :: ccs -> Text -> ByteString -> ExceptT Error IO ByteString
   putState ccs key value =
     let payload = putStatePayload key value
         message =
             buildChaincodeMessage PUT_STATE payload (txId ccs) (channelId ccs)
-    in  do
+    in ExceptT $ do
           e <- (sendStream ccs) message
           case e of
-            Left  err -> error ("Error while streaming: " ++ show err)
-            Right _   -> pure ()
-          listenForResponse (recvStream ccs)
-
+            Left  err -> pure $ Left $ Error $ "Error while streaming: " ++ show err
+            Right _   -> listenForResponse (recvStream ccs)
+          
   -- delState :: ccs -> Text -> IO (Maybe Error)
   delState ccs key =
       let payload = delStatePayload key
           message = buildChaincodeMessage DEL_STATE payload (txId ccs) (channelId ccs)
-      in do
+      in ExceptT $ do
         e <- (sendStream ccs) message
         case e of
           Left err -> error ("Error while streaming: " ++ show err)
@@ -154,7 +149,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
   getStateByRange ccs startKey endKey =
     let payload = getStateByRangePayload startKey endKey Nothing
         message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs)
-    in do
+    in ExceptT $ do
           e <- (sendStream ccs) message
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
@@ -170,7 +165,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
       }
         payload = (trace "Building getStateByRangeWithPagination payload") getStateByRangePayload startKey endKey $ Just metadata
         message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs)
-    in do
+    in ExceptT $ do
           e <- (sendStream ccs) message
           case e of
             Left  err -> error ("Error while streaming: " ++ show err)
@@ -190,7 +185,7 @@ instance StateQueryIteratorInterface StateQueryIterator where
   -- close :: sqi -> IO (Maybe Error)
   close _ = pure Nothing
   -- next :: sqi -> IO (Either Error Pb.KV)
-  next sqi = do
+  next sqi = ExceptT $ do
     eeQueryResultBytes <- nextResult sqi 
     case eeQueryResultBytes of
       Left _ -> pure $ Left $ Error "Error getting next queryResultBytes"
