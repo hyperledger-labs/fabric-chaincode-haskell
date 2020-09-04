@@ -2,18 +2,18 @@
 
 module Helper where
 
-import           Data.Bifunctor                 ( first )
-import           Proto3.Suite                  as Suite
-import           Common.Common                 as Pb
-import           Peer.ChaincodeShim            as Pb
-import           Peer.Chaincode                as Pb
-import           Peer.Proposal                 as Pb
-import           Peer.ProposalResponse         as Pb
-import           Types                          ( Error(..)
-                                                , ChaincodeStub(..)
-                                                , MapTextBytes
-                                                )
+import           Common.Common         as Pb
 
+import           Data.Bifunctor        ( first )
+
+import           Peer.Chaincode        as Pb
+import           Peer.ChaincodeShim    as Pb
+import           Peer.Proposal         as Pb
+import           Peer.ProposalResponse as Pb
+
+import           Proto3.Suite          as Suite
+
+import           Types                 ( ChaincodeStub(..), Error(..), MapTextBytes )
 
 -- These are some helper functions to process the unmarshalling of different types
 -- from the chaincode message in order to populate the stub
