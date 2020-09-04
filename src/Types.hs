@@ -17,7 +17,7 @@ import           Network.GRPC.HighLevel
 import           Peer.ChaincodeShim            as Pb
 import           Google.Protobuf.Timestamp     as Pb
 import           Peer.Proposal                 as Pb
-import           Peer.ProposalResponse         as Pb
+import Peer.ProposalResponse as Pb ( Response )
 
 data Error = GRPCError GRPCIOError
     | InvalidArgs
