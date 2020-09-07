@@ -16,7 +16,6 @@ import           Data.Aeson                       ( FromJSON
 import qualified Data.ByteString                  as BS
 import qualified Data.ByteString.Lazy             as LBS
 import qualified Data.ByteString.UTF8             as BSU
-import           Data.Functor.Classes
 import           Data.Text                        ( Text, append, pack, unpack )
 import qualified Data.Text.Encoding               as TSE
 import qualified Data.Text.Lazy                   as TL

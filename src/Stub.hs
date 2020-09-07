@@ -163,8 +163,7 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
         let metadata = Pb.QueryMetadata { Pb.queryMetadataPageSize = fromIntegral pageSize
                                         , Pb.queryMetadataBookmark = TL.fromStrict bookmark
                                         }
-            payload = (trace "Building getStateByRangeWithPagination payload") getStateByRangePayload startKey endKey $
-                Just metadata
+            payload = getStateByRangePayload startKey endKey $ Just metadata
             message = buildChaincodeMessage GET_STATE_BY_RANGE payload (txId ccs) (channelId ccs)
         in
             ExceptT $ do
@@ -180,7 +179,8 @@ instance StateQueryIteratorInterface StateQueryIterator where
       -- hasNext :: sqi -> IO Bool
     hasNext sqi = do
         queryResponse <- readIORef $ sqiResponse sqi
-        currentLoc <- (trace $ "Query response: " ++ show queryResponse) readIORef $ sqiCurrentLoc sqi
+        -- (trace $ "Query response: " ++ show queryResponse)
+        currentLoc <- readIORef $ sqiCurrentLoc sqi
         pure $ (currentLoc < Prelude.length (Pb.queryResponseResults queryResponse))
             || (Pb.queryResponseHasMore queryResponse)
 
@@ -235,7 +235,7 @@ bsToSqiAndMeta ccs bs =
                 in
                     case eeMetadata of
                         Left err -> ExceptT $ pure $ Left $ DecodeError err
-                        Right metadata -> (trace $ "Metadata from bsToSqiAndMeta: " ++ show metadata) ExceptT $ do
+                        Right metadata -> ExceptT $ do
                             -- queryResponse and currentLoc are IORefs as they need to be mutated
                             -- as a part of the next() function 
                             queryResponseIORef <- newIORef queryResponse
@@ -261,9 +261,9 @@ nextResult sqi = do
                      modifyIORef (sqiCurrentLoc sqi) (+ 1)
                      if ((currentLoc + 1) == Prelude.length (Pb.queryResponseResults $ queryResponse))
                          then do
-                             (trace "Fetching next query result from the peer") fetchNextQueryResult sqi
+                             fetchNextQueryResult sqi
                              queryResult
-                         else (trace "Returning local query result") queryResult
+                         else queryResult
         else pure $ Left $ Error "Invalid iterator state"
 
 -- This function is only called when the local result list has been 
