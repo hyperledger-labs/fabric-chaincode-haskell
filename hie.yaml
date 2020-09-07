@@ -3,13 +3,13 @@ cradle:
         - path: "./src"
           component: "fabric-chaincode-haskell:lib"
 
-        - path: "./examples/Fabcar.hs"
+        - path: "./examples/fabcar/Fabcar.hs"
           component: "fabric-chaincode-haskell:exe:fabcar-exe"
 
-        - path: "./examples/Sacc.hs"
+        - path: "./examples/sacc/Sacc.hs"
           component: "fabric-chaincode-haskell:exe:sacc-exe"
 
-        - path: "./examples/Marbles.hs"
+        - path: "./examples/marbles/Marbles.hs"
           component: "fabric-chaincode-haskell:exe:marbles-exe"
 
         - path: "./test"
