@@ -8,12 +8,12 @@ import qualified Common.Common                    as Pb
 
 import           Control.Monad.Except             ( ExceptT(..), runExceptT, throwError )
 
--- import           Data.Int                      (fromIntegral)
 import           Data.Bifunctor
 import           Data.ByteString                  as BS
 import qualified Data.ByteString.Lazy             as LBS
+import           Data.Char                        ( chr )
 import           Data.IORef                       ( modifyIORef, newIORef, readIORef, writeIORef )
-import           Data.Text
+import           Data.Text                        as TS
 import           Data.Text.Encoding
 import           Data.Text.Lazy                   as TL
 import           Data.Vector                      as Vector ( (!), Vector, empty, foldr, length, toList )
@@ -167,26 +167,34 @@ instance ChaincodeStubInterface DefaultChaincodeStub where
                 runExceptT $ ExceptT (listenForResponse (recvStream ccs)) >>= (bsToSqiAndMeta ccs)
 
     -- TODO: This is the next TODO! Implement these 7 function because they are needed in marbles.hs
-    -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
+    -- getStateByPartialCompositeKey :: ccs -> Text -> [Text] -> Either Error StateQueryIterator
     getStateByPartialCompositeKey ccs objectType keys = throwError $ Error "not implemented"
 
-    --getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+    --getStateByPartialCompositeKeyWithPagination :: ccs -> Text -> [Text] -> Int32 -> Text -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     getStateByPartialCompositeKeyWithPagination ccs objectType keys pageSize bookmark =
         throwError $ Error "not implemented"
 
-    --createCompositeKey :: ccs -> String -> [String] -> Either Error String
-    createCompositeKey ccs objectType keys = throwError $ Error "not implemented"
+    --createCompositeKey :: ccs -> Text -> [Text] -> Either Error Text
+    createCompositeKey ccs objectType keys =
+        let keysString = Prelude.foldr (\key acc -> acc ++ TS.unpack key ++ nullCodepoint) "" keys
+            nullCodepoint = [ chr 0 ]
+        in
+            -- TODO: Check that objectTypes and keys are all valid utf8 strings
+            Right $ TS.pack $ "\x00" ++ TS.unpack objectType ++ nullCodepoint ++ keysString
 
-    --splitCompositeKey :: ccs -> String -> Either Error (String, [String])
-    splitCompositeKey ccs key = throwError $ Error "not implemented"
+    --splitCompositeKey :: ccs -> Text -> Either Error (Text, [Text])
+    splitCompositeKey ccs key =
+        -- key has the form \x00objectTypeU+0000keyU+0000key etc so we use `tail key` to ignore the \x00 char
+        -- and then split on the unicode codepoint U+0000 to extract the objectType and keys
+        let keys = TS.splitOn (TS.singleton $ chr 0) (TS.tail key) in Right (Prelude.head keys, Prelude.tail keys)
 
-    --getQueryResult :: ccs -> String -> Either Error StateQueryIterator
+    --getQueryResult :: ccs -> Text -> Either Error StateQueryIterator
     getQueryResult ccs query = throwError $ Error "not implemented"
 
-    --getQueryResultWithPagination :: ccs -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+    --getQueryResultWithPagination :: ccs -> Text -> Int32 -> Text -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
     getQueryResultWithPagination ccs key pageSize bookmark = throwError $ Error "not implemented"
 
-    --getHistoryForKey :: ccs -> String -> Either Error HistoryQueryIterator
+    --getHistoryForKey :: ccs -> Text -> Either Error HistoryQueryIterator
     getHistoryForKey ccs key = throwError $ Error "not implemented"
 
 instance StateQueryIteratorInterface StateQueryIterator where

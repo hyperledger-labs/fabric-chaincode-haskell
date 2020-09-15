@@ -16,6 +16,7 @@ import           Data.Aeson                       ( FromJSON
 import qualified Data.ByteString                  as BS
 import qualified Data.ByteString.Lazy             as LBS
 import qualified Data.ByteString.UTF8             as BSU
+import           Data.Char                        ( chr )
 import           Data.Text                        ( Text, append, pack, unpack )
 import qualified Data.Text.Encoding               as TSE
 import qualified Data.Text.Lazy                   as TL
@@ -92,7 +93,6 @@ invokeFunc s =
             --   queryMarblesWithPagination s parameters
             Right (fn, _) -> pure $ errorPayload (pack ("Invoke did not find function: " ++ unpack fn))
 
--- TODO: implement CreateCompositeKey to index the marble by color
 initMarble :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
 initMarble s params =
     if Prelude.length params == 4
@@ -101,12 +101,19 @@ initMarble s params =
                  response <- getState s (head params)
                  -- Check if marble already exists
                  if BS.length response /= 0
-                     then throwError $ Error $ "This marble already exists: " ++ (unpack $ head params)
-                     else 
-                         -- marshal marble to JSON
-                         let marbleJSON = LBS.toStrict $ encode (parseMarble params)
-                         in
-                             putState s (head params) marbleJSON)
+                     then throwError $ Error $ "This marble already exists: " ++ unpack (head params)
+                     else let
+                              -- marshal marble to JSON
+                              marbleJSON = LBS.toStrict $ encode (parseMarble params)
+                              indexName = "color~name"
+                              nullCharByteString = BSU.fromString [ chr 0 ]
+                          in
+                              do
+                                  -- we don't care about the response of putState in the success case
+                                  _ <- putState s (head params) marbleJSON
+                                  colorNameIndexKey
+                                      <- ExceptT $ pure $ createCompositeKey s indexName [ params !! 1, params !! 0 ]
+                                  putState s colorNameIndexKey nullCharByteString)
     else pure $ errorPayload "Incorrect arguments. Need a marble name, color, size and owner"
 
 transferMarble :: DefaultChaincodeStub -> [Text] -> IO Pb.Response
