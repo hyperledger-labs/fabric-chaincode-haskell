@@ -1,10 +1,10 @@
-name:                fabric-chaincode-haskell
-version:             0.1.0.0
-github:              "nwaywood/fabric-chaincode-haskell"
-license:             Apache-2
-author:              "Nick Waywood, Allison Irvin"
-maintainer:          "n.waywood@gmail.com"
-copyright:           "2020 Nick Waywood"
+name: fabric-chaincode-haskell
+version: 0.1.0.0
+github: "nwaywood/fabric-chaincode-haskell"
+license: Apache-2
+author: "Nick Waywood, Allison Irvin"
+maintainer: "n.waywood@gmail.com"
+copyright: "2020 Nick Waywood"
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -13,75 +13,75 @@ copyright:           "2020 Nick Waywood"
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/nwaywood/fabric-chaincode-haskell>
+description: Please see the README on GitHub at <https://github.com/nwaywood/fabric-chaincode-haskell>
 
 dependencies:
-  - base >= 4.7 && < 5
-  - grpc-haskell-core
-  - grpc-haskell
-  - proto3-suite
-  - proto3-wire
-  - vector
-  - bytestring
-  - text
-  - deepseq
-  - containers
-  - utf8-string
-  - aeson
-  - mtl
+    - base >= 4.7 && < 5
+    - grpc-haskell-core
+    - grpc-haskell
+    - proto3-suite
+    - proto3-wire
+    - vector
+    - bytestring
+    - text
+    - deepseq
+    - containers
+    - utf8-string
+    - aeson
+    - mtl
 
 library:
-  source-dirs:
-    - src
-    - protos-hs
+    source-dirs:
+        - src
+        - protos-hs
 
 executables:
-  sacc-exe:
-    main:                Sacc.hs
-    source-dirs:         examples
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -Wall
-    - -Wincomplete-uni-patterns
-    - -main-is Sacc
-    dependencies:
-    - fabric-chaincode-haskell
-  marbles-exe:
-    main:                Marbles.hs
-    source-dirs:         examples
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -Wall
-    - -Wincomplete-uni-patterns
-    - -main-is Marbles
-    dependencies:
-    - fabric-chaincode-haskell
-  fabcar-exe:
-    main:                Fabcar.hs
-    source-dirs:         examples
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -Wall
-    - -Wincomplete-uni-patterns
-    - -main-is Fabcar
-    dependencies:
-    - fabric-chaincode-haskell
+    sacc-exe:
+        main: Sacc.hs
+        source-dirs: examples/sacc
+        ghc-options:
+            - -threaded
+            - -rtsopts
+            - -with-rtsopts=-N
+            - -Wall
+            - -Wincomplete-uni-patterns
+            - -main-is Sacc
+        dependencies:
+            - fabric-chaincode-haskell
+    marbles-exe:
+        main: Marbles.hs
+        source-dirs: examples/marbles
+        ghc-options:
+            - -threaded
+            - -rtsopts
+            - -with-rtsopts=-N
+            - -Wall
+            - -Wincomplete-uni-patterns
+            - -main-is Marbles
+        dependencies:
+            - fabric-chaincode-haskell
+    fabcar-exe:
+        main: Fabcar.hs
+        source-dirs: examples/fabcar
+        ghc-options:
+            - -threaded
+            - -rtsopts
+            - -with-rtsopts=-N
+            - -Wall
+            - -Wincomplete-uni-patterns
+            - -main-is Fabcar
+        dependencies:
+            - fabric-chaincode-haskell
 
 tests:
-  fabric-chaincode-haskell-test:
-    main:                Spec.hs
-    source-dirs:         test
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - fabric-chaincode-haskell
-      - tasty
-      - tasty-hunit
+    fabric-chaincode-haskell-test:
+        main: Spec.hs
+        source-dirs: test
+        ghc-options:
+            - -threaded
+            - -rtsopts
+            - -with-rtsopts=-N
+        dependencies:
+            - fabric-chaincode-haskell
+            - tasty
+            - tasty-hunit

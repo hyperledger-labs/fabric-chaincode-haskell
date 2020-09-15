@@ -124,7 +124,8 @@ class ChaincodeStubInterface ccs where
     -- Call Close() on the returned StateQueryIteratorInterface object when done.
     -- The query is re-executed during validation phase to ensure result set
     -- has not changed since transaction endorsement (phantom reads detected).
-    -- getStateByPartialCompositeKey :: ccs -> String -> [String] -> Either Error StateQueryIterator
+    getStateByPartialCompositeKey :: ccs -> Text -> [Text] -> ExceptT Error IO StateQueryIterator
+
     -- GetStateByPartialCompositeKeyWithPagination queries the state in the ledger based on
     -- a given partial composite key. This function returns an iterator
     -- which can be used to iterate over the composite keys whose
@@ -143,18 +144,22 @@ class ChaincodeStubInterface ccs where
     -- code point). See related functions SplitCompositeKey and CreateCompositeKey.
     -- Call Close() on the returned StateQueryIteratorInterface object when done.
     -- This call is only supported in a read only transaction.
-    -- getStateByPartialCompositeKeyWithPagination :: ccs -> String -> [String] -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+    getStateByPartialCompositeKeyWithPagination
+        :: ccs -> Text -> [Text] -> Int -> Text -> ExceptT Error IO (StateQueryIterator, Pb.QueryResponseMetadata)
+
     -- CreateCompositeKey combines the given `attributes` to form a composite
     -- key. The objectType and attributes are expected to have only valid utf8
     -- strings and should not contain U+0000 (nil byte) and U+10FFFF
     -- (biggest and unallocated code point).
     -- The resulting composite key can be used as the key in PutState().
-    -- createCompositeKey :: ccs -> String -> [String] -> Either Error String
+    createCompositeKey :: ccs -> Text -> [Text] -> Either Error Text
+
     -- SplitCompositeKey splits the specified key into attributes on which the
     -- composite key was formed. Composite keys found during range queries
     -- or partial composite key queries can therefore be split into their
     -- composite parts.
-    -- splitCompositeKey :: ccs -> String -> Either Error (String, [String])
+    splitCompositeKey :: ccs -> Text -> Either Error (Text, [Text])
+
     -- GetQueryResult performs a "rich" query against a state database. It is
     -- only supported for state databases that support rich query,
     -- e.g.CouchDB. The query string is in the native syntax
@@ -170,7 +175,8 @@ class ChaincodeStubInterface ccs where
     -- be detected at validation/commit time.  Applications susceptible to this
     -- should therefore not use GetQueryResult as part of transactions that update
     -- ledger, and should limit use to read-only chaincode operations.
-    -- getQueryResult :: ccs -> String -> Either Error StateQueryIterator
+    getQueryResult :: ccs -> Text -> ExceptT Error IO StateQueryIterator
+
     -- GetQueryResultWithPagination performs a "rich" query against a state database.
     -- It is only supported for state databases that support rich query,
     -- e.g., CouchDB. The query string is in the native syntax
@@ -184,7 +190,9 @@ class ChaincodeStubInterface ccs where
     -- can be used as a value to the bookmark argument. Otherwise, an empty string
     -- must be passed as bookmark.
     -- This call is only supported in a read only transaction.
-    -- getQueryResultWithPagination :: ccs -> String -> Int32 -> String -> Either Error (StateQueryIterator, Pb.QueryResponseMetadata)
+    getQueryResultWithPagination
+        :: ccs -> Text -> Int -> Text -> ExceptT Error IO (StateQueryIterator, Pb.QueryResponseMetadata)
+
     -- GetHistoryForKey returns a history of key values across time.
     -- For each historic key update, the historic value and associated
     -- transaction id and timestamp are returned. The timestamp is the
@@ -197,7 +205,9 @@ class ChaincodeStubInterface ccs where
     -- detected at validation/commit time. Applications susceptible to this
     -- should therefore not use GetHistoryForKey as part of transactions that
     -- update ledger, and should limit use to read-only chaincode operations.
-    -- getHistoryForKey :: ccs -> Either Error HistoryQueryIterator
+    -- TODO: value should be HistoryQueryIterator
+    getHistoryForKey :: ccs -> Text -> ExceptT Error IO StateQueryIterator
+
     -- GetPrivateData returns the value of the specified `key` from the specified
     -- `collection`. Note that GetPrivateData doesn't read data from the
     -- private writeset, which has not been committed to the `collection`. In
