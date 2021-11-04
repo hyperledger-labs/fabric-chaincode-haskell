@@ -5,33 +5,40 @@
 
 packages:
 - completed:
-    hackage: grpc-haskell-core-0.0.0.0@sha256:4bacd90915321750db570042cd05ada01b9b83c79f6bf6b6ccdef1889b383efa,3306
+    hackage: grpc-haskell-core-0.1.0@sha256:50adbefd11be9e8b72ea98b7c3b5a4b2879fea211de4552b9759b91f2d4d8c51,3304
     pantry-tree:
       size: 2330
-      sha256: 2b6324b0b2e9a3ca3ba98864945fb7c6bedad5fbe94ddfc1a1dbec1069d63bde
+      sha256: 5225c7c8413b57b43e94ec64a7efbc107fa764ccf66eb1fa6a7be22e5a98c683
   original:
-    hackage: grpc-haskell-core-0.0.0.0@sha256:4bacd90915321750db570042cd05ada01b9b83c79f6bf6b6ccdef1889b383efa,3306
+    hackage: grpc-haskell-core-0.1.0
 - completed:
-    hackage: grpc-haskell-0.0.1.0@sha256:453f89f3a3a846b31596b0f8f41ed3d71c747d59b208a043d75afd37a9f17308,6012
+    hackage: grpc-haskell-0.1.0@sha256:af109db9bf7d7d00a5088fb30dab1a03e3c54b19c66dc1ac0d8d61217524d11b,6334
     pantry-tree:
-      size: 1933
-      sha256: 4f0fe14943b118a4f26919ccf2e15ac9ff9640c8dd923cac63e9ce3338e4c39d
+      size: 1934
+      sha256: d02f71fad7f9c8d734c30d6c039f1ad98e210e416ddb960c961d0669a4c184fc
   original:
-    hackage: grpc-haskell-0.0.1.0@sha256:453f89f3a3a846b31596b0f8f41ed3d71c747d59b208a043d75afd37a9f17308,6012
+    hackage: grpc-haskell-0.1.0
 - completed:
-    hackage: proto3-suite-0.4.0.0@sha256:51545a2592f22d1bf612a2f55ca3af8b0083fb5c620c8996bc6d48f742d1faa1,5720
+    hackage: proto3-suite-0.4.2@sha256:1d6cb5807250df144d550bb621b4aa20d6870907f84413860375cd30bcc935e9,6253
     pantry-tree:
-      size: 2972
-      sha256: f67473f90bac87cd65765571639149ddf3c88e52755c64d9e602a585a7c52571
+      size: 3119
+      sha256: dc14b7edce979a67a60b6d789c8b4863c87981529f53b0ba490555fd71f1fe8b
   original:
-    hackage: proto3-suite-0.4.0.0@sha256:51545a2592f22d1bf612a2f55ca3af8b0083fb5c620c8996bc6d48f742d1faa1,5720
+    hackage: proto3-suite-0.4.2
 - completed:
-    hackage: proto3-wire-1.1.0@sha256:a8fe11ec7c8d01ded2224a1ca43c53cdc09adefd197a3b21ab14b543923840f3,1993
+    hackage: proto3-wire-1.2.2@sha256:06cfbd240071099b01c78f90d540a6276e4b40626a97cae9e8668ace5d773864,2756
     pantry-tree:
-      size: 666
-      sha256: c6b85d517d924449b19898c96ddc72added6272cbd9593472496e8c305b04fbd
+      size: 1009
+      sha256: dd8a00722794fa6aee7e3d3fda5f10f518951664a7f8ae880c7d017599972c5e
   original:
-    hackage: proto3-wire-1.1.0@sha256:a8fe11ec7c8d01ded2224a1ca43c53cdc09adefd197a3b21ab14b543923840f3,1993
+    hackage: proto3-wire-1.2.2
+- completed:
+    hackage: parameterized-0.5.0.0@sha256:880717fbb958de1bac015f0a375ab6636f162a72483d987a11e305da6fac6c97,1969
+    pantry-tree:
+      size: 1019
+      sha256: 843aed822e03279edf00a2595dfb22038b306f4f0acd6984bd108024c5102f90
+  original:
+    hackage: parameterized-0.5.0.0
 snapshots:
 - completed:
     size: 524164
