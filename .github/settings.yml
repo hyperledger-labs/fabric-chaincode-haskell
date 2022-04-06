@@ -1,0 +1,8 @@
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+repository:
+  name: fabric-chaincode-haskell
+  description: Haskell support for smart contracts in Hyperledger Fabric
+  archived: true
+  private: false
